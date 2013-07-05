@@ -1,0 +1,9 @@
+{
+    "service": {
+        "ff104b2dfab9fe8c0676587292a636d3": "ftp",
+        "ca654591d4ac97414391907f882b3c05": "gopher"
+    },
+    "customer_number": {
+        "dcddb75469b4b4875094e14561e573d8": "00000"
+    }
+}
