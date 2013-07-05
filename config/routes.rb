@@ -47,4 +47,6 @@ ActionController::Routing::Routes.draw do |map|
   map.connect 'service/start', :controller => 'service', :action => 'start', :via => :get
   map.connect 'service/restart', :controller => 'service', :action => 'restart', :via => :get
 
+  map.connect 'service/get_host_list', :controller => 'service', :action => 'get_host_list', :via => :get
+
 end
