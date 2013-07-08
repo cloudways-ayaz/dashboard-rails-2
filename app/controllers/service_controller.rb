@@ -20,6 +20,7 @@ class ServiceController < ApplicationController
         @customer_number = nil
         @response = {:status => 0}
         @is_clean = true
+        @rpc_options = {:configfile => "/home/ayaz/.mcollective/client.cfg"}
     end
 
     def check_params
@@ -73,19 +74,27 @@ class ServiceController < ApplicationController
         end
 
         begin
-            rpc_client = rpcclient('service', {:configfile => "/home/ayaz/.mcollective/client.cfg"})
+            rpc_client = rpcclient('service', @rpc_options)
             rpc_client.verbose = false
-            #unless @customer_number.nil?
-            #    rpc_client.fact_filter "cloudways_customer", @customer_number
-            #end
+
+            unless @customer_number.nil?
+                rpc_client.fact_filter "cloudways_customer", @customer_number
+            end
 
             unless @hostname.nil?
                 rpc_client.identity_filter @hostname
             end
+
             rpc_response = rpc_client.status(:service => @service_name)
+            response = {
+                :statuscode => rpc_response[0][:statuscode],
+                :statusmsg => rpc_response[0][:statusmsg],
+                :status => rpc_response[0][:data][:status],
+                :sender => rpc_response[0][:sender]
+            }
+
             @response[:status] = 0
-            @response[:response] = rpc_response
-            #@response = rpc_response
+            @response[:response] = response
         rescue Exception => e
             @response[:status] = -2
             @response[:msg] = "Server error: #{e}"
@@ -107,10 +116,20 @@ class ServiceController < ApplicationController
             unless @customer_number.nil?
                 rpc_client.fact_filter "cloudways_customer", @customer_number
             end
+
+            unless @hostname.nil?
+                rpc_client.identity_filter @hostname
+            end
             rpc_response = rpc_client.start(:service => @service_name)
+            response = {
+                :statuscode => rpc_response[0][:statuscode],
+                :statusmsg => rpc_response[0][:statusmsg],
+                :status => rpc_response[0][:data][:status],
+                :sender => rpc_response[0][:sender]
+            }
+
             @response[:status] = 0
-            @response[:response] = rpc_response
-            #@response = rpc_response
+            @response[:response] = response
         rescue Exception => e
             @response[:status] = -2
             @response[:msg] = "API error: #{e}"
@@ -131,10 +150,20 @@ class ServiceController < ApplicationController
             unless @customer_number.nil?
                 rpc_client.fact_filter "cloudways_customer", @customer_number
             end
+
+            unless @hostname.nil?
+                rpc_client.identity_filter @hostname
+            end
             rpc_response = rpc_client.stop(:service => @service_name)
+            response = {
+                :statuscode => rpc_response[0][:statuscode],
+                :statusmsg => rpc_response[0][:statusmsg],
+                :status => rpc_response[0][:data][:status],
+                :sender => rpc_response[0][:sender]
+            }
+
             @response[:status] = 0
-            @response[:response] = rpc_response
-            #@response = rpc_response
+            @response[:response] = response
         rescue Exception => e
             @response[:status] = -2
             @response[:msg] = "API error: #{e}"
@@ -155,10 +184,20 @@ class ServiceController < ApplicationController
             unless @customer_number.nil?
                 rpc_client.fact_filter "cloudways_customer", @customer_number
             end
+
+            unless @hostname.nil?
+                rpc_client.identity_filter @hostname
+            end
             rpc_response = rpc_client.restart(:service => @service_name)
+            response = {
+                :statuscode => rpc_response[0][:statuscode],
+                :statusmsg => rpc_response[0][:statusmsg],
+                :status => rpc_response[0][:data][:status],
+                :sender => rpc_response[0][:sender]
+            }
+
             @response[:status] = 0
-            @response[:response] = rpc_response
-            #@response = rpc_response
+            @response[:response] = response
         rescue Exception => e
             @response[:status] = -2
             @response[:msg] = "API error: #{e}"
@@ -185,7 +224,7 @@ class ServiceController < ApplicationController
         end
 
         begin
-            rpc_client = rpcclient('rpcutil')
+            rpc_client = rpcclient('rpcutil', @rpc_options)
             rpc_client.verbose = false
             rpc_client.fact_filter "cloudways_customer", @customer_number
             rpc_response = rpc_client.get_fact(:fact => 'fqdn')
