@@ -3,11 +3,9 @@ require 'mcollective'
 include MCollective::RPC
 
 class ServiceController < ApplicationController
-    #http_basic_authenticate_with :name => "cloudways-dev-api", :password => "cloudways123+"
-    #before_filter :init
     USER = "cloudways-dev-api"
     PASSWORD = "cloudways123+"
-#    before_filter :authenticate
+    before_filter :authenticate
     before_filter :init
 
     def authenticate
