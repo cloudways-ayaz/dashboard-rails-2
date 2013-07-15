@@ -10,7 +10,6 @@ class ServiceController < ApplicationController
 
     def authenticate
         authenticate_or_request_with_http_basic('Administration') do |username, password|
-            #username == USER && password == PASSWORD
             @params_verifier.verify_auth(username, password)
         end
     end
@@ -228,10 +227,20 @@ class ServiceController < ApplicationController
             rpc_client = rpcclient('rpcutil', @rpc_options)
             rpc_client.verbose = false
             rpc_client.fact_filter "cloudways_customer", @customer_number
-            rpc_response = rpc_client.get_fact(:fact => 'fqdn')
+            rpc_response = rpc_client.get_facts(:facts => 'fqdn hostname cloudways_roles')
             host_list = []
             rpc_response.each do |resp|
-                host_list.push(resp[:data][:value])
+                unless resp[:data][:values].nil?
+                    roles = resp[:data][:values]['cloudways_roles']
+                    begin
+                        roles = roles.split(',')
+                    rescue NoMethodError => e
+                        roles = []
+                    end
+                    host_list.push({:fqdn => resp[:data][:values]['fqdn'], 
+                                    :hostname => resp[:data][:values]['hostname'], 
+                                    :roles => roles})
+                end
             end
             response = {:hostnames => host_list}
             @response[:status] = 0
