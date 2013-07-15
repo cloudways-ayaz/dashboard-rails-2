@@ -5,12 +5,13 @@ include MCollective::RPC
 class ServiceController < ApplicationController
     USER = "cloudways-dev-api"
     PASSWORD = "cloudways123+"
-    before_filter :authenticate
     before_filter :init
+#    before_filter :authenticate
 
     def authenticate
         authenticate_or_request_with_http_basic('Administration') do |username, password|
-            username == USER && password == PASSWORD
+            #username == USER && password == PASSWORD
+            @params_verifier.verify_auth(username, password)
         end
     end
 

@@ -11,5 +11,13 @@ module ServiceHelper
         def get_customer_number(customer_number)
             return @params_dict["customer_number"][customer_number]
         end
+
+
+        def verify_auth(username, password)
+            if @params_dict[:auth][:user] == username && @params_dict[:auth][:pass] == password
+                return true
+            end
+            return false
+        end
     end
 end
