@@ -227,7 +227,7 @@ class ServiceController < ApplicationController
             rpc_client = rpcclient('rpcutil', @rpc_options)
             rpc_client.verbose = false
             rpc_client.fact_filter "cloudways_customer", @customer_number
-            rpc_response = rpc_client.get_facts(:facts => 'fqdn hostname cloudways_roles')
+            rpc_response = rpc_client.get_facts(:facts => 'fqdn, hostname, cloudways_roles')
             host_list = []
             rpc_response.each do |resp|
                 unless resp[:data][:values].nil?
