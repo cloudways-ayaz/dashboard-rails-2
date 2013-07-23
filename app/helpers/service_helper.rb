@@ -14,7 +14,7 @@ module ServiceHelper
 
 
         def verify_auth(username, password)
-            if @params_dict[:auth][:user] == username && @params_dict[:auth][:pass] == password
+            if @params_dict["auth"]["user"] == username && @params_dict["auth"]["pass"] == password
                 return true
             end
             return false
