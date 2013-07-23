@@ -6,7 +6,10 @@
     "service": {
         "ff104b2dfab9fe8c0676587292a636d3": "ftp",
         "ca654591d4ac97414391907f882b3c05": "gopher",
-        "81c3b080dad537de7e10e0987a4bf52e": "mysql"
+        "81c3b080dad537de7e10e0987a4bf52e": "mysql",
+        "974318ed5c1366d5e6cb585cc3540bfb": "apache2",
+        "ee434023cf89d7dfb21f63d64f0f9d74": "nginx",
+        "c23bd2a0047189e89aa9bea67adbc1f0": "varnish"
     },
     "customer_number": {
         "dcddb75469b4b4875094e14561e573d8": "00000",
