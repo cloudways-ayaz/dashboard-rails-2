@@ -20,6 +20,7 @@ class ServiceController < ApplicationController
         @customer_number = nil
         @response = {:status => 0}
         @is_clean = true
+        @timeout = 25
         @rpc_options = {:configfile => "/home/ayaz/.mcollective/client.cfg"}
     end
 
@@ -76,6 +77,7 @@ class ServiceController < ApplicationController
         begin
             rpc_client = rpcclient('service', @rpc_options)
             rpc_client.verbose = false
+            rpc_client.timeout = @timeout
 
             unless @customer_number.nil?
                 rpc_client.fact_filter "cloudways_customer", @customer_number
@@ -113,6 +115,8 @@ class ServiceController < ApplicationController
         begin
             rpc_client = rpcclient('service')
             rpc_client.verbose = false
+            rpc_client.timeout = @timeout
+
             unless @customer_number.nil?
                 rpc_client.fact_filter "cloudways_customer", @customer_number
             end
@@ -147,6 +151,8 @@ class ServiceController < ApplicationController
         begin
             rpc_client = rpcclient('service')
             rpc_client.verbose = false
+            rpc_client.timeout = @timeout
+
             unless @customer_number.nil?
                 rpc_client.fact_filter "cloudways_customer", @customer_number
             end
@@ -181,6 +187,8 @@ class ServiceController < ApplicationController
         begin
             rpc_client = rpcclient('service')
             rpc_client.verbose = false
+            rpc_client.timeout = @timeout
+
             unless @customer_number.nil?
                 rpc_client.fact_filter "cloudways_customer", @customer_number
             end
@@ -227,6 +235,7 @@ class ServiceController < ApplicationController
             rpc_client = rpcclient('rpcutil', @rpc_options)
             rpc_client.verbose = false
             rpc_client.fact_filter "cloudways_customer", @customer_number
+            rpc_client.timeout = @timeout
             rpc_response = rpc_client.get_facts(:facts => 'fqdn, hostname, cloudways_roles')
             host_list = []
             rpc_response.each do |resp|
