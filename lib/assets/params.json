@@ -6,8 +6,9 @@
     "service": {
         "81c3b080dad537de7e10e0987a4bf52e": "mysql",
         "974318ed5c1366d5e6cb585cc3540bfb": "apache2",
+        "b6efd606d118d0f62066e31419ff04cc": "apache",
         "ee434023cf89d7dfb21f63d64f0f9d74": "nginx",
-	"ed29e75037443b824dbc1dcabe0af817": "memcached",
+        "ed29e75037443b824dbc1dcabe0af817": "memcached",
         "c23bd2a0047189e89aa9bea67adbc1f0": "varnish"
     },
     "customer_number": {
