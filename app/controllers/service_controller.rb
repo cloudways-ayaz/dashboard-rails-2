@@ -233,7 +233,9 @@ class ServiceController < ApplicationController
                 unless resp[:data][:values].nil?
                     roles = resp[:data][:values]['cloudways_roles']
                     begin
-                        roles = roles.split(',')
+                        # The apache role returned actually
+                        # corresponds to apache2 service.
+                        roles = roles.gsub(/\bapache\b/, "apache2").split(',')
                     rescue NoMethodError => e
                         roles = []
                     end
