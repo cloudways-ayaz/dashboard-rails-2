@@ -75,7 +75,7 @@ class ServiceController < ApplicationController
         end
 
         begin
-            rpc_client = rpcclient('service', @rpc_options)
+            rpc_client = rpcclient('service', @rpc_options, {:exit_on_failure => false})
             rpc_client.verbose = false
             rpc_client.timeout = @timeout
 
@@ -113,7 +113,7 @@ class ServiceController < ApplicationController
         end
 
         begin
-            rpc_client = rpcclient('service')
+            rpc_client = rpcclient('service', {:exit_on_failure => false})
             rpc_client.verbose = false
             rpc_client.timeout = @timeout
 
@@ -149,7 +149,7 @@ class ServiceController < ApplicationController
         end
 
         begin
-            rpc_client = rpcclient('service')
+            rpc_client = rpcclient('service', {:exit_on_failure => false})
             rpc_client.verbose = false
             rpc_client.timeout = @timeout
 
@@ -185,7 +185,7 @@ class ServiceController < ApplicationController
         end
 
         begin
-            rpc_client = rpcclient('service')
+            rpc_client = rpcclient('service', {:exit_on_failure => false})
             rpc_client.verbose = false
             rpc_client.timeout = @timeout
 
@@ -232,7 +232,7 @@ class ServiceController < ApplicationController
         end
 
         begin
-            rpc_client = rpcclient('rpcutil', @rpc_options)
+            rpc_client = rpcclient('rpcutil', {:exit_on_failure => false})
             rpc_client.verbose = false
             rpc_client.fact_filter "cloudways_customer", @customer_number
             rpc_client.timeout = @timeout
