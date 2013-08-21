@@ -1,6 +1,7 @@
 
 require 'mcollective'
 include MCollective::RPC
+require 'md5'
 
 class ServiceController < ApplicationController
     USER = "cloudways-dev-api"
@@ -259,6 +260,41 @@ class ServiceController < ApplicationController
         rescue Exception => e
             @response[:status] = -2
             @response[:msg] = "API error: #{e}"
+        end
+
+        render :json => @response
+    end
+
+    #
+    # Add a new customer_number and its hash to the JSON file that stores
+    # customer numbers.
+    # Input: customer_number
+    #
+    def add_customer
+        customer_number = params[:customer_number]
+
+        if customer_number.nil?
+            @response[:status] = -1
+            @response[:msg] = "Customer number parameter missing."
+            return render :json => @response
+        end
+        customer_number_hash = MD5.new(customer_number).hexdigest
+
+        status = @params_verifier.add_customer(customer_number, customer_number_hash)
+
+        if status
+            begin
+                @params_verifier.write_params_to_file()
+            rescue Exception => e
+                @response[:status] = -2
+                @response[:msg] = "Failed to update customer. #{e}"
+            else
+                @response[:status] = 0
+                @response[:response] = "Customer added"
+            end
+        else
+            @response[:status] = -1
+            @response[:msg] = "Customer already present."
         end
 
         render :json => @response

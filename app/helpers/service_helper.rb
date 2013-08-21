@@ -19,5 +19,19 @@ module ServiceHelper
             end
             return false
         end
+
+        def add_customer(customer_number, customer_number_hash)
+            unless @params_dict["customer_number"].has_key?(customer_number_hash)
+                @params_dict["customer_number"][customer_number_hash] = customer_number
+                return true
+            end
+            return false
+        end
+
+        def write_params_to_file
+            fh = File.open(File.join(Rails.root, 'lib', 'assets', 'added.json'))
+            JSON.dump(@params_dict, fh)
+            fh.close()
+        end
     end
 end
