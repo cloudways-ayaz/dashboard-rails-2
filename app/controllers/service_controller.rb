@@ -6,6 +6,7 @@ require 'md5'
 class ServiceController < ApplicationController
     USER = "cloudways-dev-api"
     PASSWORD = "cloudways123+"
+    skip_before_filter :verify_authenticity_token
     before_filter :init
 #    before_filter :authenticate
 

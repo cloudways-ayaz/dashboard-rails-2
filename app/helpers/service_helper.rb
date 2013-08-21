@@ -29,7 +29,7 @@ module ServiceHelper
         end
 
         def write_params_to_file
-            fh = File.open(File.join(Rails.root, 'lib', 'assets', 'added.json'))
+            fh = File.open(File.join(Rails.root, 'lib', 'assets', 'params.json'), 'w')
             JSON.dump(@params_dict, fh)
             fh.close()
         end

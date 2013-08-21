@@ -49,6 +49,6 @@ ActionController::Routing::Routes.draw do |map|
 
   map.connect 'service/get_host_list', :controller => 'service', :action => 'get_host_list', :via => :get
 
-  map.connect 'service/customer/add', :controller => 'service', :action => 'add_customer', :via => :post
+  map.connect 'service/add_customer', :controller => 'service', :action => 'add_customer', :via => :post
 
 end
