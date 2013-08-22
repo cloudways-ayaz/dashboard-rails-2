@@ -244,12 +244,17 @@ class ServiceController < ApplicationController
                 unless resp[:data][:values].nil?
                     roles = resp[:data][:values]['cloudways_roles']
                     begin
+                        # For standardweb role, replace it with apache2, nginx, and
+                        # varnish.
+                        roles = roles.gsub(/\bstandardweb\b/, "apache2,varnish,nginx")
                         # The apache role returned actually
                         # corresponds to apache2 service.
-                        roles = roles.gsub(/\bapache\b/, "apache2").split(',')
+                        roles = roles.gsub(/\bapache\b/, "apache2")
+                        roles = roles.split(',')
                     rescue NoMethodError => e
                         roles = []
                     end
+
                     host_list.push({:fqdn => resp[:data][:values]['fqdn'], 
                                     :hostname => resp[:data][:values]['hostname'], 
                                     :roles => roles})
