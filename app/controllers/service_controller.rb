@@ -238,15 +238,28 @@ class ServiceController < ApplicationController
             rpc_client.verbose = false
             rpc_client.fact_filter "cloudways_customer", @customer_number
             rpc_client.timeout = @timeout
-            rpc_response = rpc_client.get_facts(:facts => 'fqdn, hostname, cloudways_roles')
+            rpc_response = rpc_client.get_facts(:facts => 'fqdn, hostname, cloudways_roles, cloudways_varnish_enabled')
             host_list = []
             rpc_response.each do |resp|
                 unless resp[:data][:values].nil?
                     roles = resp[:data][:values]['cloudways_roles']
                     begin
+
                         # For standardweb role, replace it with apache2, nginx, and
                         # varnish.
-                        roles = roles.gsub(/\bstandardweb\b/, "apache2,varnish,nginx")
+                        # However, before doing that, we need to ensure whether
+                        # varnish is enabled or disabled on the remote server..
+                        if roles.include?('standardweb')
+                            varnish_enabled = resp[:data][:values]['cloudways_varnish_enabled']
+                            if varnish_enabled == "0":
+                                standard_web_roles = "apache2,varnish,nginx"
+                            else
+                                standard_web_roles = "apache2,nginx"
+                            end
+                            roles = roles.gsub(/\bstandardweb\b/, standard_web_roles)
+                        end
+
+
                         # The apache role returned actually
                         # corresponds to apache2 service.
                         roles = roles.gsub(/\bapache\b/, "apache2")
