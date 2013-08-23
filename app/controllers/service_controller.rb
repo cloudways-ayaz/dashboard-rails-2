@@ -8,7 +8,7 @@ class ServiceController < ApplicationController
     PASSWORD = "cloudways123+"
     skip_before_filter :verify_authenticity_token
     before_filter :init
-#    before_filter :authenticate
+    before_filter :authenticate
 
     def authenticate
         authenticate_or_request_with_http_basic('Administration') do |username, password|
@@ -77,7 +77,7 @@ class ServiceController < ApplicationController
         end
 
         begin
-            rpc_client = rpcclient('service', @rpc_options, {:exit_on_failure => false})
+            rpc_client = rpcclient('service', {:exit_on_failure => false})
             rpc_client.verbose = false
             rpc_client.timeout = @timeout
 
