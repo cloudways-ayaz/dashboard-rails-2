@@ -310,7 +310,7 @@ class ServiceController < ApplicationController
                 @response[:msg] = "Failed to update customer. #{e}"
             else
                 @response[:status] = 0
-                @response[:response] = "Customer added"
+                @response[:msg] = "Customer added"
             end
         else
             @response[:status] = -1
