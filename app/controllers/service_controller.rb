@@ -9,6 +9,7 @@ class ServiceController < ApplicationController
     skip_before_filter :verify_authenticity_token
     before_filter :init
     before_filter :authenticate
+    verify :method => :post, :only => :add_customer
 
     def authenticate
         authenticate_or_request_with_http_basic('Administration') do |username, password|
