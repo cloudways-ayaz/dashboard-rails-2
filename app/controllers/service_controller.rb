@@ -328,6 +328,7 @@ class ServiceController < ApplicationController
     def get_dashboard_items
         facts_dict = {
             "ram"               =>  "memorysize",
+            "ram_total"         =>  "memorytotal",
             "cloud_provider"    =>  "cloudways_cloud",
             "location"          =>  "cloudways_region",
             "roles"             =>  "cloudways_roles",
@@ -335,8 +336,10 @@ class ServiceController < ApplicationController
             "public_ip"         =>  "cloudways_public_ip",
             "os"                =>  "operatingsystem",
             "os_release"        =>  "operatingsystemrelease",
+            "os_family"         =>  "osfamily",
             "kernel"            =>  "kernel",
             "kernel_release"    =>  "kernelrelease",
+            "distribution"      =>  "lsbdistdescription",
             "procs_count"       =>  "processorcount",
             "procs_type"        =>  "processor0",
             "arch"              =>  "architecture",
@@ -377,21 +380,23 @@ class ServiceController < ApplicationController
             rpc_client.identity_filter @hostname
             rpc_client.timeout = @timeout
 
+            facts_string = facts_dict.values.join(', ')
             rpc_response = rpc_client.get_facts(:facts => facts_dict.values.join(', '))
 
             facts_result = {}
 
-            facts_dict.keys.each do |fact_name|
+            rpc_response = rpc_response[0]
+
+            facts_dict.each do |fact_hash, fact_name|
                 begin
-                    fact_value = rpc_response[:data][:values][fact_name]
+                    fact_value = rpc_response.results[:data][:values][fact_name]
                 rescue NoMethodError => e
                     fact_value = ''
                 end
-                facts_result[fact_name] = fact_value
+                facts_result[fact_hash] = fact_value
             end
 
             response = {
-                :status => rpc_response[0][:data][:status],
                 :items => facts_result,
             }
 
@@ -401,7 +406,6 @@ class ServiceController < ApplicationController
             @response[:status] = -2
             @response[:msg] = "API error: #{e}"
         end
-
 
         render :json => @response
     end
