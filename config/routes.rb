@@ -42,13 +42,17 @@ ActionController::Routing::Routes.draw do |map|
   map.connect ':controller/:action/:id.:format'
 
 
-  map.connect 'service/status', :controller => 'service', :action => 'status', :via => :get
-  map.connect 'service/stop', :controller => 'service', :action => 'stop', :via => :get
-  map.connect 'service/start', :controller => 'service', :action => 'start', :via => :get
-  map.connect 'service/restart', :controller => 'service', :action => 'restart', :via => :get
+  map.connect 'service/status',         :controller => 'service', :action => 'status',              :via => :get
+  map.connect 'service/stop',           :controller => 'service', :action => 'stop',                :via => :get
+  map.connect 'service/start',          :controller => 'service', :action => 'start',               :via => :get
+  map.connect 'service/restart',        :controller => 'service', :action => 'restart',             :via => :get
 
-  map.connect 'service/get_host_list', :controller => 'service', :action => 'get_host_list', :via => :get
+  map.connect 'service/get_host_list',  :controller => 'service', :action => 'get_host_list',       :via => :get
+  map.connect 'service/add_customer',   :controller => 'service', :action => 'add_customer',        :via => :post
 
-  map.connect 'service/add_customer', :controller => 'service', :action => 'add_customer', :via => :post
 
+  #
+  # items URL
+  # 
+  map.connect 'dashboard/get_items',    :controller => 'service', :action => 'get_dashboard_items',  :via => :get
 end

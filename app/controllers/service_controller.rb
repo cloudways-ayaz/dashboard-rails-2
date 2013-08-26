@@ -319,4 +319,90 @@ class ServiceController < ApplicationController
 
         render :json => @response
     end
+
+
+    #
+    # Return selected facts values.
+    # Input: hostname, customer_number_hash
+    # 
+    def get_dashboard_items
+        facts_dict = {
+            "ram"               =>  "memorysize",
+            "cloud_provider"    =>  "cloudways_cloud",
+            "location"          =>  "cloudways_region",
+            "roles"             =>  "cloudways_roles",
+            "websites"          =>  "cloudways_websites_list",
+            "public_ip"         =>  "cloudways_public_ip",
+            "os"                =>  "operatingsystem",
+            "os_release"        =>  "operatingsystemrelease",
+            "kernel"            =>  "kernel",
+            "kernel_release"    =>  "kernelrelease",
+            "procs_count"       =>  "processorcount",
+            "procs_type"        =>  "processor0",
+            "arch"              =>  "architecture",
+            "hardware_model"    =>  "hardwaremodel",
+            "uptime"            =>  "uptime",
+        }
+        @customer_number = params[:customer_number]
+        @hostname = params[:hostname]
+
+        if @customer_number.nil?
+            @response[:status] = -1
+            @response[:msg] = "Customer number parameter missing."
+            @is_clean = false
+        end
+
+        if @hostname.nil?
+            @response[:status] = -1
+            @response[:msg] = "Hostname parameter missing."
+            @is_clean = false
+        end
+
+        @customer_number = @params_verifier.get_customer_number(@customer_number)
+        if @customer_number.nil?
+            @response[:status] = -1
+            @response[:msg] = "Incorrect customer number provided."
+            @is_clean = false
+        end
+
+        unless @is_clean
+            return render :json => @response
+        end
+
+
+        begin
+            rpc_client = rpcclient('rpcutil', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.fact_filter "cloudways_customer", @customer_number
+            rpc_client.identity_filter @hostname
+            rpc_client.timeout = @timeout
+
+            rpc_response = rpc_client.get_facts(:facts => facts_dict.values.join(', '))
+
+            facts_result = {}
+
+            facts_dict.keys.each do |fact_name|
+                begin
+                    fact_value = rpc_response[:data][:values][fact_name]
+                rescue NoMethodError => e
+                    fact_value = ''
+                end
+                facts_result[fact_name] = fact_value
+            end
+
+            response = {
+                :status => rpc_response[0][:data][:status],
+                :items => facts_result,
+            }
+
+            @response[:status] = 0
+            @response[:response] = response
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:msg] = "API error: #{e}"
+        end
+
+
+        render :json => @response
+    end
 end
