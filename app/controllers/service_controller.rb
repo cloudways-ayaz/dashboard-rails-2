@@ -234,16 +234,13 @@ class ServiceController < ApplicationController
             return render :json => @response
         end
 
-        facts = ['fqdn', 'hostname', 'cloudways_roles', 
-                 'cloudwdays_varnish_enabled',
-                ]
+        facts = ['fqdn', 'hostname', 'cloudways_roles', 'cloudways_varnish_enabled']
         service_facts = {
-            'cloudways_apache_installed'        => 'apache2',
-            'cloudways_apache2_installed'       => 'apache2',
             'cloudways_mysql_installed'         => 'mysql',
             'cloudways_nginx_installed'         => 'nginx',
             'cloudways_varnish_installed'       => 'varnish',
             'cloudways_memcached_installed'     => 'memcached',
+            'cloudways_apache2_installed'       => 'apache2',
         }
 
         begin
@@ -251,46 +248,62 @@ class ServiceController < ApplicationController
             rpc_client.verbose = false
             rpc_client.fact_filter "cloudways_customer", @customer_number
             rpc_client.timeout = @timeout
-            rpc_response = rpc_client.get_facts(:facts => facts.zip(service_facts).join(', '))
+            rpc_client.progress = false
+            rpc_response = rpc_client.get_facts(:facts => service_facts.keys.zip(facts).join(', '))
+            print "facts = #{service_facts.keys.zip(facts).join(', ')}"
             host_list = []
-            roles = []
-            is_varnish_enabled = false
             rpc_response.each do |resp|
                 unless resp[:data][:values].nil?
 
+                    roles = []
+                    # 0 = varnish is enabled
+                    # 1 = varnish is disabled
+                    # 2 = varnish doesn't exist
+                    is_varnish_enabled = 1
 
-                    
                     service_facts.each do |fact_name, service_name|
-                        val = resp[:data][:values][fact_name]
-                        if val == '0':
-                            roles.push(service_name)
+                        if resp[:data][:values].include?(fact_name)
+                            val = resp[:data][:values][fact_name]
+                            if val and val == '0'
+                                roles.push(service_name)
+                            end
+                        end
                     end 
 
                     cw_roles = resp[:data][:values]['cloudways_roles']
                     begin
 
-                        # For standardweb role, replace it with apache2, nginx, and
-                        # varnish.
-                        # However, before doing that, we need to ensure whether
-                        # varnish is enabled or disabled on the remote server..
+                        # only for 'standardweb' role do we check whether varnish is enabled or disabled.
+                        # and if varnish is disabled, we do not provide it in the list of services even
+                        # if varnish is installed.
                         if cw_roles.include?('standardweb')
                             varnish_enabled = resp[:data][:values]['cloudways_varnish_enabled']
-                            if varnish_enabled == "0":
-                                is_varnish_enabled = true
-                                unless roles.include?('varnish'):
-                                    roles.push('varnish')
-                            else:
-                                roles.delete('varnish')
-                        end
 
-                        roles = roles.split(',')
+                            if varnish_enabled
+                                if varnish_enabled == "0"
+                                    is_varnish_enabled = 0
+                                    unless roles.include?('varnish')
+                                        roles.push('varnish')
+                                    end
+                                elsif varnish_enabled == "1"
+                                    is_varnish_enabled = 1
+                                    roles.delete('varnish')
+                                end
+                            else
+                                # if varnish_enabled is nil, we set the value to 2.
+                                is_varnish_enabled = 2
+                                roles.delete('varnish')
+                            end
+                        end
                     rescue NoMethodError => e
                     end
 
                     host_list.push({:fqdn => resp[:data][:values]['fqdn'], 
                                     :hostname => resp[:data][:values]['hostname'], 
                                     :roles => roles,
-                                    :varnish_enabled => is_varnish_enabled})
+                                    :varnish_enabled => is_varnish_enabled,
+                                    :cw_roles => cw_roles,
+                    })
                 end
             end
             response = {:hostnames => host_list}
