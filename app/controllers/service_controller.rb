@@ -234,44 +234,63 @@ class ServiceController < ApplicationController
             return render :json => @response
         end
 
+        facts = ['fqdn', 'hostname', 'cloudways_roles', 
+                 'cloudwdays_varnish_enabled',
+                ]
+        service_facts = {
+            'cloudways_apache_installed'        => 'apache2',
+            'cloudways_apache2_installed'       => 'apache2',
+            'cloudways_mysql_installed'         => 'mysql',
+            'cloudways_nginx_installed'         => 'nginx',
+            'cloudways_varnish_installed'       => 'varnish',
+            'cloudways_memcached_installed'     => 'memcached',
+        }
+
         begin
             rpc_client = rpcclient('rpcutil', {:exit_on_failure => false})
             rpc_client.verbose = false
             rpc_client.fact_filter "cloudways_customer", @customer_number
             rpc_client.timeout = @timeout
-            rpc_response = rpc_client.get_facts(:facts => 'fqdn, hostname, cloudways_roles, cloudways_varnish_enabled')
+            rpc_response = rpc_client.get_facts(:facts => facts.zip(service_facts).join(', '))
             host_list = []
+            roles = []
+            is_varnish_enabled = false
             rpc_response.each do |resp|
                 unless resp[:data][:values].nil?
-                    roles = resp[:data][:values]['cloudways_roles']
+
+
+                    
+                    service_facts.each do |fact_name, service_name|
+                        val = resp[:data][:values][fact_name]
+                        if val == '0':
+                            roles.push(service_name)
+                    end 
+
+                    cw_roles = resp[:data][:values]['cloudways_roles']
                     begin
 
                         # For standardweb role, replace it with apache2, nginx, and
                         # varnish.
                         # However, before doing that, we need to ensure whether
                         # varnish is enabled or disabled on the remote server..
-                        if roles.include?('standardweb')
+                        if cw_roles.include?('standardweb')
                             varnish_enabled = resp[:data][:values]['cloudways_varnish_enabled']
                             if varnish_enabled == "0":
-                                standard_web_roles = "apache2,varnish,nginx"
-                            else
-                                standard_web_roles = "apache2,nginx"
-                            end
-                            roles = roles.gsub(/\bstandardweb\b/, standard_web_roles)
+                                is_varnish_enabled = true
+                                unless roles.include?('varnish'):
+                                    roles.push('varnish')
+                            else:
+                                roles.delete('varnish')
                         end
 
-
-                        # The apache role returned actually
-                        # corresponds to apache2 service.
-                        roles = roles.gsub(/\bapache\b/, "apache2")
                         roles = roles.split(',')
                     rescue NoMethodError => e
-                        roles = []
                     end
 
                     host_list.push({:fqdn => resp[:data][:values]['fqdn'], 
                                     :hostname => resp[:data][:values]['hostname'], 
-                                    :roles => roles})
+                                    :roles => roles,
+                                    :varnish_enabled => is_varnish_enabled})
                 end
             end
             response = {:hostnames => host_list}
