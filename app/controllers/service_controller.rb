@@ -70,6 +70,34 @@ class ServiceController < ApplicationController
         @response
     end
 
+    def check_customer_number_and_hostname_params
+        @is_clean = false
+        @customer_number = params[:customer_number]
+        @hostname = params[:hostname]
+
+        if @customer_number.nil?
+            @response[:status] = -1
+            @response[:msg] = "Customer number parameter missing."
+            return @response
+        end
+
+        if @hostname.nil?
+            @response[:status] = -1
+            @response[:msg] = "Hostname parameter missing."
+            return @response
+        end
+
+        @customer_number = @params_verifier.get_customer_number(@customer_number)
+        if @customer_number.nil?
+            @response[:status] = -1
+            @response[:msg] = "Incorrect customer number provided."
+            return @response
+        end
+
+        @is_clean = true
+        @response
+    end
+
 
     def status
         @response = check_params
@@ -453,7 +481,7 @@ class ServiceController < ApplicationController
     # Enable varnish.
     # 
     def varnish_enable
-        @response = check_params
+        @response = check_customer_number_and_hostname_params
         unless @is_clean
             return render :json => @response
         end
@@ -487,7 +515,7 @@ class ServiceController < ApplicationController
     # Disable varnish
     #
     def varnish_disable
-        @response = check_params
+        @response = check_customer_number_and_hostname_params
         unless @is_clean
             return render :json => @response
         end
