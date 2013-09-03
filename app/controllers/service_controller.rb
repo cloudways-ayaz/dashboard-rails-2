@@ -80,6 +80,7 @@ class ServiceController < ApplicationController
         begin
             rpc_client = rpcclient('service', {:exit_on_failure => false})
             rpc_client.verbose = false
+            rpc_client.progress = false
             rpc_client.timeout = @timeout
 
             unless @customer_number.nil?
@@ -118,6 +119,7 @@ class ServiceController < ApplicationController
         begin
             rpc_client = rpcclient('service', {:exit_on_failure => false})
             rpc_client.verbose = false
+            rpc_client.progress = false
             rpc_client.timeout = @timeout
 
             unless @customer_number.nil?
@@ -154,6 +156,7 @@ class ServiceController < ApplicationController
         begin
             rpc_client = rpcclient('service', {:exit_on_failure => false})
             rpc_client.verbose = false
+            rpc_client.progress = false
             rpc_client.timeout = @timeout
 
             unless @customer_number.nil?
@@ -190,6 +193,7 @@ class ServiceController < ApplicationController
         begin
             rpc_client = rpcclient('service', {:exit_on_failure => false})
             rpc_client.verbose = false
+            rpc_client.progress = false
             rpc_client.timeout = @timeout
 
             unless @customer_number.nil?
@@ -408,6 +412,7 @@ class ServiceController < ApplicationController
         begin
             rpc_client = rpcclient('rpcutil', {:exit_on_failure => false})
             rpc_client.verbose = false
+            rpc_client.progress = false
             rpc_client.fact_filter "cloudways_customer", @customer_number
             rpc_client.identity_filter @hostname
             rpc_client.timeout = @timeout
