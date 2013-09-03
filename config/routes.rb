@@ -55,4 +55,12 @@ ActionController::Routing::Routes.draw do |map|
   # items URL
   # 
   map.connect 'dashboard/get_items',    :controller => 'service', :action => 'get_dashboard_items',  :via => :get
+
+
+  #
+  # varnish enable and disable
+  #
+  map.connect 'varnish/enable',         :controller => 'service', :action => 'varnish_enable',      :via => :get
+  map.connect 'varnish/disable',        :controller => 'service', :action => 'varnish_disable',     :via => :get
+
 end

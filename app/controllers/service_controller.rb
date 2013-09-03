@@ -446,4 +446,74 @@ class ServiceController < ApplicationController
 
         render :json => @response
     end
+
+
+
+    #
+    # Enable varnish.
+    # 
+    def varnish_enable
+        @response = check_params
+        unless @is_clean
+            return render :json => @response
+        end
+
+        begin
+            rpc_client = rpcclient('varnish', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progress = false
+            rpc_client.timeout = @timeout
+
+            unless @customer_number.nil?
+                rpc_client.fact_filter "cloudways_customer", @customer_number
+            end
+
+            unless @hostname.nil?
+                rpc_client.identity_filter @hostname
+            end
+            rpc_response = rpc_client.enable()
+
+            @response[:status] = rpc_response[0][:data][:status]
+            @response[:response] = rpc_response[0][:data][:result]
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:msg] = "API error: #{e}"
+        end
+
+        render :json => @response
+    end
+
+    #
+    # Disable varnish
+    #
+    def varnish_disable
+        @response = check_params
+        unless @is_clean
+            return render :json => @response
+        end
+
+        begin
+            rpc_client = rpcclient('varnish', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progress = false
+            rpc_client.timeout = @timeout
+
+            unless @customer_number.nil?
+                rpc_client.fact_filter "cloudways_customer", @customer_number
+            end
+
+            unless @hostname.nil?
+                rpc_client.identity_filter @hostname
+            end
+            rpc_response = rpc_client.disable()
+
+            @response[:status] = rpc_response[0][:data][:status]
+            @response[:response] = rpc_response[0][:data][:result]
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:msg] = "API error: #{e}"
+        end
+
+        render :json => @response
+    end
 end
