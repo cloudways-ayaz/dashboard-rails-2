@@ -292,8 +292,8 @@ class ServiceController < ApplicationController
                     # If role is standardweb, varnish can be toggled. Otherwise
                     # not.
                     toggle_varnish = false
-                    # 0 = varnish is enabled
-                    # 1 = varnish is disabled
+                    # 1 = varnish is enabled
+                    # 0 = varnish is disabled
                     # 2 = varnish doesn't exist
                     is_varnish_enabled = 1
 
@@ -317,13 +317,13 @@ class ServiceController < ApplicationController
                             varnish_enabled = resp[:data][:values]['cloudways_varnish_enabled']
 
                             if varnish_enabled
-                                if varnish_enabled == "0"
-                                    is_varnish_enabled = 0
+                                if varnish_enabled == "1"
+                                    is_varnish_enabled = 1
                                     unless roles.include?('varnish')
                                         roles.push('varnish')
                                     end
-                                elsif varnish_enabled == "1"
-                                    is_varnish_enabled = 1
+                                elsif varnish_enabled == "0"
+                                    is_varnish_enabled = 0
                                     roles.delete('varnish')
                                 elsif varnish_enabled == "2"
                                     is_varnish_enabled = 2
