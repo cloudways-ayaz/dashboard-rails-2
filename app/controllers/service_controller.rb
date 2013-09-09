@@ -272,7 +272,7 @@ class ServiceController < ApplicationController
             'cloudways_nginx_installed'         => 'nginx',
             'cloudways_varnish_installed'       => 'varnish',
             'cloudways_memcached_installed'     => 'memcached',
-            'cloudways_apache2_installed'       => 'apache2',
+            'cloudways_apache2_installed'       => 'apache2'
         }
 
         begin
@@ -281,8 +281,9 @@ class ServiceController < ApplicationController
             rpc_client.fact_filter "cloudways_customer", @customer_number
             rpc_client.timeout = @timeout
             rpc_client.progress = false
-            rpc_response = rpc_client.get_facts(:facts => service_facts.keys.zip(facts).join(', '))
-            print "facts = #{service_facts.keys.zip(facts).join(', ')}"
+            f = service_facts.keys.zip(facts).flatten.compact.join(', ')
+            print "facts = #{f}"
+            rpc_response = rpc_client.get_facts(:facts => f)
             host_list = []
             rpc_response.each do |resp|
                 unless resp[:data][:values].nil?
