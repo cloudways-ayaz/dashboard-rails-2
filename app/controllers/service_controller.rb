@@ -288,6 +288,9 @@ class ServiceController < ApplicationController
                 unless resp[:data][:values].nil?
 
                     roles = []
+                    # If role is standardweb, varnish can be toggled. Otherwise
+                    # not.
+                    toggle_varnish = false
                     # 0 = varnish is enabled
                     # 1 = varnish is disabled
                     # 2 = varnish doesn't exist
@@ -309,6 +312,7 @@ class ServiceController < ApplicationController
                         # and if varnish is disabled, we do not provide it in the list of services even
                         # if varnish is installed.
                         if cw_roles.include?('standardweb')
+                            toggle_varnish = true
                             varnish_enabled = resp[:data][:values]['cloudways_varnish_enabled']
 
                             if varnish_enabled
@@ -329,15 +333,18 @@ class ServiceController < ApplicationController
                                 is_varnish_enabled = 2
                                 roles.delete('varnish')
                             end
+                        else
+                            toggle_varnish = false
                         end
                     rescue NoMethodError => e
                     end
 
-                    host_list.push({:fqdn => resp[:data][:values]['fqdn'], 
-                                    :hostname => resp[:data][:values]['hostname'], 
-                                    :roles => roles,
-                                    :varnish_enabled => is_varnish_enabled,
-                                    :cw_roles => cw_roles,
+                    host_list.push({:fqdn               => resp[:data][:values]['fqdn'], 
+                                    :hostname           => resp[:data][:values]['hostname'], 
+                                    :roles              => roles,
+                                    :varnish_enabled    => is_varnish_enabled,
+                                    :cw_roles           => cw_roles,
+                                    :toggle_varnish     => toggle_varnish,
                     })
                 end
             end
