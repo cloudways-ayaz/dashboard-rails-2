@@ -326,7 +326,9 @@ class ServiceController < ApplicationController
                                     end
                                 elsif varnish_enabled == "0"
                                     is_varnish_enabled = 0
-                                    roles.delete('varnish')
+                                    unless roles.include?('varnish')
+                                        roles.push('varnish')
+                                    end
                                 elsif varnish_enabled == "2"
                                     is_varnish_enabled = 2
                                     roles.delete('varnish')
