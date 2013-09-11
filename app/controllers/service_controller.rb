@@ -294,17 +294,6 @@ class ServiceController < ApplicationController
                     toggle_varnish = false
 
 
-                    # Call varnish::status action.
-                    # This makes another MCO call over the network.
-                    rclient = rpcclient('varnish', {:exit_on_failure => false})
-                    rclient.verbose = false
-                    rclient.timeout = @timeout
-                    rclient.progress = false
-                    rclient.identity_filter(resp[:data][:values]['fqdn'])
-                    res = rclient.status()
-                    varnish_enabled = res[0][:data][:status]
-
-
                     # 1 = varnish is enabled
                     # 0 = varnish is disabled
                     # 2 = varnish doesn't exist
@@ -327,6 +316,7 @@ class ServiceController < ApplicationController
                         # if varnish is installed.
                         if cw_roles.include?('standardweb')
                             toggle_varnish = true
+                            varnish_enabled = resp[:data][:values]['cloudways_varnish_enabled']
 
                             if varnish_enabled
                                 if varnish_enabled == "1"
@@ -560,6 +550,39 @@ class ServiceController < ApplicationController
 
             @response[:status] = rpc_response[0][:data][:status]
             @response[:response] = rpc_response[0][:data][:result]
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:msg] = "API error: #{e}"
+        end
+
+        render :json => @response
+    end
+    
+    #
+    # Check varnish enable/disable status
+    #
+    def varnish_status
+        @response = check_customer_number_and_hostname_params
+        unless @is_clean
+            return render :json => @response
+        end
+
+        begin
+            rpc_client = rpcclient('varnish', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progress = false
+            rpc_client.timeout = @timeout
+
+            unless @customer_number.nil?
+                rpc_client.fact_filter "cloudways_customer", @customer_number
+            end
+
+            unless @hostname.nil?
+                rpc_client.identity_filter @hostname
+            end
+            rpc_response = rpc_client.status()
+
+            @response[:status] = rpc_response[0][:data][:status]
         rescue Exception => e
             @response[:status] = -2
             @response[:msg] = "API error: #{e}"
