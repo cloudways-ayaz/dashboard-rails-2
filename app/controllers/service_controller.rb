@@ -292,6 +292,19 @@ class ServiceController < ApplicationController
                     # If role is standardweb, varnish can be toggled. Otherwise
                     # not.
                     toggle_varnish = false
+
+
+                    # Call varnish::status action.
+                    # This makes another MCO call over the network.
+                    rclient = rpcclient('varnish', {:exit_on_failure => false})
+                    rclient.verbose = false
+                    rclient.timeout = @timeout
+                    rclient.progress = false
+                    rclient.identity_filter(resp[:data][:values]['fqdn'])
+                    res = rclient.status()
+                    varnish_enabled = res[0][:data][:status]
+
+
                     # 1 = varnish is enabled
                     # 0 = varnish is disabled
                     # 2 = varnish doesn't exist
@@ -314,7 +327,6 @@ class ServiceController < ApplicationController
                         # if varnish is installed.
                         if cw_roles.include?('standardweb')
                             toggle_varnish = true
-                            varnish_enabled = resp[:data][:values]['cloudways_varnish_enabled']
 
                             if varnish_enabled
                                 if varnish_enabled == "1"
