@@ -64,4 +64,10 @@ ActionController::Routing::Routes.draw do |map|
   map.connect 'varnish/disable',        :controller => 'service', :action => 'varnish_disable',     :via => :get
   map.connect 'varnish/status',         :controller => 'service', :action => 'varnish_status',      :via => :get
 
+
+  #
+  # servers count
+  #
+  map.connect 'servers/count',          :controller => 'service', :action => 'servers_count',       :via => :get
+
 end

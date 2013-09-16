@@ -592,4 +592,29 @@ class ServiceController < ApplicationController
 
         render :json => @response
     end
+
+
+    #
+    # Return total number of customer servers available on MCollective network.
+    #
+    def servers_count
+        begin
+            rpc_client = rpcclient('rpcutil', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progres = false
+            rpc_client.timeout = @timeout
+
+            total_servers = rpc_client.ping().length()
+
+            rpc_client.fact_filter("cloudways_customer", "00000")
+            test_servers = rpc_client.ping().length()
+
+            @response[:status] = 0
+            @response[:servers_count] = total_servers - test_servers
+
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:msg] = "API error: #{e}"
+        end
+    end
 end
