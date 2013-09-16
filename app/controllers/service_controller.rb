@@ -601,7 +601,7 @@ class ServiceController < ApplicationController
         begin
             rpc_client = rpcclient('rpcutil', {:exit_on_failure => false})
             rpc_client.verbose = false
-            rpc_client.progres = false
+            rpc_client.progress = false
             rpc_client.timeout = @timeout
 
             total_servers = rpc_client.ping().length()
@@ -616,5 +616,7 @@ class ServiceController < ApplicationController
             @response[:status] = -2
             @response[:msg] = "API error: #{e}"
         end
+
+        render :json => @response
     end
 end
