@@ -609,7 +609,7 @@ class ServiceController < ApplicationController
             rpc_client.fact_filter("cloudways_customer", "00000")
             test_servers = rpc_client.ping().length()
 
-            @response[:status] = 0
+            @response[:status] = 1
             @response[:servers_count] = total_servers - test_servers
 
         rescue Exception => e
