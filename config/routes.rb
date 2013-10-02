@@ -63,6 +63,7 @@ ActionController::Routing::Routes.draw do |map|
   map.connect 'varnish/enable',         :controller => 'service', :action => 'varnish_enable',      :via => :get
   map.connect 'varnish/disable',        :controller => 'service', :action => 'varnish_disable',     :via => :get
   map.connect 'varnish/status',         :controller => 'service', :action => 'varnish_status',      :via => :get
+  map.connect 'varnish/purge_cache',    :controller => 'service', :action => 'varnish_purge_cache', :via => :get
 
 
   #

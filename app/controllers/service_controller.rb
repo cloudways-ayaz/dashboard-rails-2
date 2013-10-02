@@ -592,6 +592,40 @@ class ServiceController < ApplicationController
 
         render :json => @response
     end
+    
+
+    #
+    # Purge varnish cache. 
+    #
+    def varnish_purge_cache
+        @response = check_customer_number_and_hostname_params
+        unless @is_clean
+            return render :json => @response
+        end
+
+        begin
+            rpc_client = rpcclient('varnish', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progress = false
+            rpc_client.timeout = @timeout
+
+            unless @customer_number.nil?
+                rpc_client.fact_filter "cloudways_customer", @customer_number
+            end
+
+            unless @hostname.nil?
+                rpc_client.identity_filter @hostname
+            end
+            rpc_response = rpc_client.purge_cache()
+
+            @response[:status] = rpc_response[0][:data][:status]
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:msg] = "API error: #{e}"
+        end
+
+        render :json => @response
+    end
 
 
     #
