@@ -251,6 +251,7 @@ class ServiceController < ApplicationController
 
 
     def get_host_list
+        response.headers['Cache-Control'] = 'public, max-age=300'
         @customer_number = params[:customer_number]
 
         if @customer_number.nil?
@@ -405,6 +406,7 @@ class ServiceController < ApplicationController
     # Input: hostname, customer_number_hash
     # 
     def get_dashboard_items
+        response.headers['Cache-Control'] = 'public, max-age=300'
         facts_dict = {
             "ram"               =>  "memorysize",
             "ram_total"         =>  "memorytotal",
@@ -632,6 +634,7 @@ class ServiceController < ApplicationController
     # Return total number of customer servers available on MCollective network.
     #
     def servers_count
+        response.headers['Cache-Control'] = 'public, max-age=300'
         begin
             rpc_client = rpcclient('rpcutil', {:exit_on_failure => false})
             rpc_client.verbose = false
