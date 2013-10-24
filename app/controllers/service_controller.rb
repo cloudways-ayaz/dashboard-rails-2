@@ -712,7 +712,7 @@ class ServiceController < ApplicationController
     # Schedule backup.
     # Takes 'frequency' input parameter.
     #
-    def backup_schedule
+    def backup_scheduled
         @response = check_customer_number_and_hostname_params
         unless @is_clean
             return render :json => @response
