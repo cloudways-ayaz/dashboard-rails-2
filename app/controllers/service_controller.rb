@@ -750,4 +750,82 @@ class ServiceController < ApplicationController
 
         render :json => @response
     end
+
+
+    #
+    # API to faciliate Application installation on servers.
+    # Takes in a slew of manadatory arugments, namely:
+    #   application, application_version, sys_user, sys_password, mysql_db_name,
+    #   mysql_user, mysql_password, app_user, app_password, app_fqdn,
+    #   customer_name, customer_email
+    #   customer_number, hostname
+    #
+    def app_install
+        @response = check_customer_number_and_hostname_params
+        unless @is_clean
+            return render :json => @response
+        end
+
+        params_list = (
+            'application', 
+            'application_version', 
+            'sys_user', 
+            'sys_password', 
+            'mysql_db_name',
+            'mysql_user', 
+            'mysql_password', 
+            'app_user', 
+            'app_password', 
+            'app_fqdn',
+            'customer_name', 
+            'customer_email'
+        )
+
+        @is_clean = true
+        params_list.each |key| do 
+            if not params.has_key?(key) or params[key].empty?
+                @is_clean = false
+                @response[:status] = -1
+                @response[:msg] = "#{key} parameter missing or empty."
+                return render :json => @response
+            end
+        end
+
+        begin
+            rpc_client = rpcclient('app_installer', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progress = false
+            rpc_client.timeout = @timeout
+
+            unless @customer_number.nil?
+                rpc_client.fact_filter "cloudways_customer", @customer_number
+            end
+
+            unless @hostname.nil?
+                rpc_client.identity_filter @hostname
+            end
+            rpc_response = rpc_client.install(
+                :application            => params[:application], 
+                :application_version    => params[:application_version], 
+                :sys_user               => params[:sys_user], 
+                :sys_password           => params[:sys_password], 
+                :mysql_db_name          => params[:mysql_db_name],
+                :mysql_user             => params[:mysql_user], 
+                :mysql_password         => params[:mysql_password], 
+                :app_user               => params[:app_user], 
+                :app_password           => params[:app_password], 
+                :app_fqdn               => params[:app_fqdn],
+                :customer_name          => params[:customer_name], 
+                :customer_email         => params[:customer_email]
+            )
+
+            @response[:status] = rpc_response[0][:data][:status]
+            @response[:response] = rpc_response[0][:data][:result]
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:msg] = "API error: #{e}"
+        end
+
+        render :json => @response
+    end
 end
