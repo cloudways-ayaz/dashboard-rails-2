@@ -98,6 +98,20 @@ class ServiceController < ApplicationController
         @response
     end
 
+    def check_hostname_param
+        @is_clean = false
+        @hostname = params[:hostname]
+
+        if @hostname.nil?
+            @response[:status] = -1
+            @response[:msg] = "Hostname parameter missing."
+            return @response
+        end
+
+        @is_clean = true
+        @response
+    end
+
 
     def status
         @response = check_params
@@ -649,6 +663,210 @@ class ServiceController < ApplicationController
             @response[:status] = 1
             @response[:servers_count] = total_servers - test_servers
 
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:msg] = "API error: #{e}"
+        end
+
+        render :json => @response
+    end
+
+
+
+
+    #
+    # On demand backup. 
+    #
+    def backup_on_demand
+        @response = check_customer_number_and_hostname_params
+        unless @is_clean
+            return render :json => @response
+        end
+
+        begin
+            rpc_client = rpcclient('backup', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progress = false
+            rpc_client.timeout = @timeout
+
+            unless @customer_number.nil?
+                rpc_client.fact_filter "cloudways_customer", @customer_number
+            end
+
+            unless @hostname.nil?
+                rpc_client.identity_filter @hostname
+            end
+            rpc_response = rpc_client.on_demand()
+
+            @response[:status] = rpc_response[0][:data][:status]
+            @response[:response] = rpc_response[0][:data][:result]
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:msg] = "API error: #{e}"
+        end
+
+        render :json => @response
+    end
+
+    #
+    # Schedule backup.
+    # Takes 'frequency' input parameter.
+    #
+    def backup_scheduled
+        @response = check_customer_number_and_hostname_params
+        unless @is_clean
+            return render :json => @response
+        end
+
+        # We take a frequency parameter which should be a positive integer.
+        begin 
+            frequency = params[:frequency].to_i
+        rescue Exception => e
+            @response[:status] = -1
+            @response[:msg] = "Frequency not set properly."
+        end
+
+        begin
+            rpc_client = rpcclient('backup', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progress = false
+            rpc_client.timeout = @timeout
+
+            unless @customer_number.nil?
+                rpc_client.fact_filter "cloudways_customer", @customer_number
+            end
+
+            unless @hostname.nil?
+                rpc_client.identity_filter @hostname
+            end
+            rpc_response = rpc_client.schedule(:frequency => frequency)
+
+            @response[:status] = rpc_response[0][:data][:status]
+            @response[:response] = rpc_response[0][:data][:result]
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:msg] = "API error: #{e}"
+        end
+
+        render :json => @response
+    end
+
+
+    #
+    # API to faciliate Application installation on servers.
+    # Takes in a slew of manadatory arugments, namely:
+    #   action, application, application_version, sys_user, sys_password, mysql_db_name,
+    #   mysql_user, mysql_password, app_user, app_password, app_fqdn,
+    #   customer_name, customer_email
+    #   customer_number, hostname
+    #
+    def app_install
+        @response = check_customer_number_and_hostname_params
+        unless @is_clean
+            return render :json => @response
+        end
+
+        params_list = (
+            'action',
+            'application', 
+            'application_version', 
+            'sys_user', 
+            'sys_password', 
+            'mysql_db_name',
+            'mysql_user', 
+            'mysql_password', 
+            'app_user', 
+            'app_password', 
+            'app_fqdn',
+            'customer_name', 
+            'customer_email'
+        )
+
+        @is_clean = true
+        params_list.each |key| do 
+            if not params.has_key?(key) or params[key].empty?
+                @is_clean = false
+                @response[:status] = -1
+                @response[:msg] = "#{key} parameter missing or empty."
+                return render :json => @response
+            end
+        end
+
+        begin
+            rpc_client = rpcclient('app_installer', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progress = false
+            rpc_client.timeout = @timeout
+
+            unless @customer_number.nil?
+                rpc_client.fact_filter "cloudways_customer", @customer_number
+            end
+
+            unless @hostname.nil?
+                rpc_client.identity_filter @hostname
+            end
+            rpc_response = rpc_client.install(
+                :action                 => params[:action],
+                :application            => params[:application], 
+                :application_version    => params[:application_version], 
+                :sys_user               => params[:sys_user], 
+                :sys_password           => params[:sys_password], 
+                :mysql_db_name          => params[:mysql_db_name],
+                :mysql_user             => params[:mysql_user], 
+                :mysql_password         => params[:mysql_password], 
+                :app_user               => params[:app_user], 
+                :app_password           => params[:app_password], 
+                :app_fqdn               => params[:app_fqdn],
+                :customer_name          => params[:customer_name], 
+                :customer_email         => params[:customer_email]
+            )
+
+            @response[:status] = rpc_response[0][:data][:status]
+            @response[:response] = rpc_response[0][:data][:result]
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:msg] = "API error: #{e}"
+        end
+
+        render :json => @response
+    end
+
+    #
+    # API call to resize disk.
+    # Takes the following inputs:
+    #   customer_number, hostname, device
+    #
+    def resize_disk
+        @response = check_customer_number_and_hostname_params
+        unless @is_clean
+            return render :json => @response
+        end
+
+        if not params.has_key?('device') or params['device'].empty?
+            @response[:status] = -1
+            @response[:msg] = "params parameter missing or empty."
+            return render :json => @response
+        end
+
+        device = params[:device]
+
+        begin
+            rpc_client = rpcclient('app_installer', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progress = false
+            rpc_client.timeout = @timeout
+
+            unless @customer_number.nil?
+                rpc_client.fact_filter "cloudways_customer", @customer_number
+            end
+
+            unless @hostname.nil?
+                rpc_client.identity_filter @hostname
+            end
+            rpc_response = rpc_client.resize_disk(:device => device)
+
+            @response[:status] = rpc_response[0][:data][:status]
+            @response[:response] = rpc_response[0][:data][:result]
         rescue Exception => e
             @response[:status] = -2
             @response[:msg] = "API error: #{e}"

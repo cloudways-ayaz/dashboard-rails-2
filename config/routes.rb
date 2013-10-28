@@ -71,4 +71,18 @@ ActionController::Routing::Routes.draw do |map|
   #
   map.connect 'servers/count',          :controller => 'service', :action => 'servers_count',       :via => :get
 
+
+  #
+  # Backup URLs
+  #
+  map.connect 'backup/on_demand',       :controller => 'service', :action => 'backup_on_demand',    :via => :get
+  map.connect 'backup/scheduled',       :controller => 'service', :action => 'backup_scheduled',    :via => :get
+
+  #
+  # App installation URLs
+  #
+  map.connect 'app/install',            :controller => 'service', :action => 'app_install',         :via => :get
+
+  map.connect 'app/resize_disk',        :controller => 'service', :action => 'resize_disk',         :via => :get
+
 end
