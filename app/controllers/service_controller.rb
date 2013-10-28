@@ -830,4 +830,48 @@ class ServiceController < ApplicationController
 
         render :json => @response
     end
+
+    #
+    # API call to resize disk.
+    # Takes the following inputs:
+    #   customer_number, hostname, device
+    #
+    def resize_disk
+        @response = check_customer_number_and_hostname_params
+        unless @is_clean
+            return render :json => @response
+        end
+
+        if not params.has_key?('device') or params['device'].empty?
+            @response[:status] = -1
+            @response[:msg] = "params parameter missing or empty."
+            return render :json => @response
+        end
+
+        device = params[:device]
+
+        begin
+            rpc_client = rpcclient('app_installer', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progress = false
+            rpc_client.timeout = @timeout
+
+            unless @customer_number.nil?
+                rpc_client.fact_filter "cloudways_customer", @customer_number
+            end
+
+            unless @hostname.nil?
+                rpc_client.identity_filter @hostname
+            end
+            rpc_response = rpc_client.resize_disk(:device => device)
+
+            @response[:status] = rpc_response[0][:data][:status]
+            @response[:response] = rpc_response[0][:data][:result]
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:msg] = "API error: #{e}"
+        end
+
+        render :json => @response
+    end
 end
