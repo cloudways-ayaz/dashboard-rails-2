@@ -85,4 +85,6 @@ ActionController::Routing::Routes.draw do |map|
 
   map.connect 'app/resize_disk',        :controller => 'service', :action => 'resize_disk',         :via => :get
 
+  map.connect 'app/add_cname',          :controller => 'service', :action => 'add_cname',           :via => :get
+
 end
