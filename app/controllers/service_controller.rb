@@ -874,4 +874,76 @@ class ServiceController < ApplicationController
 
         render :json => @response
     end
+
+
+    #
+    # This API adds a new CNAME.
+    # It takes the following parameters:
+    #   customer_number, hostname
+    #   cname (must be without protocol prefix)
+    #   server_fqdn (must be without protocol prefix)
+    #   sys_user
+    #
+    def add_cname
+        @response = check_customer_number_and_hostname_params
+        unless @is_clean
+            return render :json => @response
+        end
+
+        cname = params[:cname]
+        server_fqdn = params[:server_fqdn]
+        sys_user = params[:sys_user]
+
+        @is_clean = true
+
+        if cname.nil?
+            @response[:status] = -1
+            @response[:msg] = "cname parameter missing or empty."
+            @is_clean = false
+        end
+
+        if server_fqdn.nil?
+            @response[:status] = -1
+            @response[:msg] = "server_fqdn parameter missing or empty."
+            @is_clean = false
+        end
+
+        if sys_user.nil?
+            @response[:status] = -1
+            @response[:msg] = "sys_user parameter missing or empty."
+            @is_clean = false
+        end
+
+        unless @is_clean
+            return render :json => @response
+        end
+
+        begin
+            rpc_client = rpcclient('app_installer', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progress = false
+            rpc_client.timeout = @timeout
+
+            unless @customer_number.nil?
+                rpc_client.fact_filter "cloudways_customer", @customer_number
+            end
+
+            unless @hostname.nil?
+                rpc_client.identity_filter @hostname
+            end
+            rpc_response = rpc_client.add_cname(:cname => cname,
+                                                :server_fqdn => server_fqdn,
+                                                :sys_user => sys_user)
+
+            @response[:status] = rpc_response[0][:data][:status]
+            @response[:response] = rpc_response[0][:data][:result]
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:msg] = "API error: #{e}"
+        end
+
+        render :json => @response
+    end
+
+
 end
