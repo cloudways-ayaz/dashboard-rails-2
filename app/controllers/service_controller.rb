@@ -281,7 +281,9 @@ class ServiceController < ApplicationController
             return render :json => @response
         end
 
-        facts = ['fqdn', 'hostname', 'cloudways_roles', 'cloudways_varnish_enabled']
+        facts = ['fqdn', 'hostname', 'cloudways_roles', 'cloudways_varnish_enabled',
+                 'cloudways_backup_last_duplicity', 'cloudways_backup_last_mysql', 
+                 'cloudways_backup_last_rsnapshot']
         service_facts = {
             'cloudways_mysql_installed'         => 'mysql',
             'cloudways_nginx_installed'         => 'nginx',
@@ -359,12 +361,15 @@ class ServiceController < ApplicationController
                     rescue NoMethodError => e
                     end
 
-                    host_list.push({:fqdn               => resp[:data][:values]['fqdn'], 
-                                    :hostname           => resp[:data][:values]['hostname'], 
-                                    :roles              => roles,
-                                    :varnish_enabled    => is_varnish_enabled,
-                                    :cw_roles           => cw_roles,
-                                    :toggle_varnish     => toggle_varnish,
+                    host_list.push({:fqdn                   => resp[:data][:values]['fqdn'], 
+                                    :hostname               => resp[:data][:values]['hostname'], 
+                                    :roles                  => roles,
+                                    :varnish_enabled        => is_varnish_enabled,
+                                    :cw_roles               => cw_roles,
+                                    :toggle_varnish         => toggle_varnish,
+                                    :last_off_site_backup   => resp[:data][:values]['cloudways_backup_last_duplicity'],
+                                    :last_db_backup         => resp[:data][:values]['cloudways_backup_last_mysql'],
+                                    :last_file_backup       => resp[:data][:values]['cloudways_backup_last_rsnapshot']
                     })
                 end
             end
