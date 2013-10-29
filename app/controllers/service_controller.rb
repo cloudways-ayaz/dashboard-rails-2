@@ -281,9 +281,9 @@ class ServiceController < ApplicationController
             return render :json => @response
         end
 
-        facts = ['fqdn', 'hostname', 'cloudways_roles', 'cloudways_varnish_enabled',
-                 'cloudways_backup_last_duplicity', 'cloudways_backup_last_mysql', 
-                 'cloudways_backup_last_rsnapshot']
+        facts = ['fqdn', 'hostname', 'cloudways_roles', 'cloudways_varnish_enabled']
+        backup_facts = ['cloudways_backup_last_duplicity', 'cloudways_backup_last_mysql', 
+                        'cloudways_backup_last_rsnapshot']
         service_facts = {
             'cloudways_mysql_installed'         => 'mysql',
             'cloudways_nginx_installed'         => 'nginx',
@@ -361,15 +361,33 @@ class ServiceController < ApplicationController
                     rescue NoMethodError => e
                     end
 
+                    fqdn = resp[:data][:values]['fqdn']
+                    # For some reason, if we include backup_facts in the list above, only one fact is 
+                    # returned. So we make another rpc call.
+                    begin
+                        rpc_client.identity_filter fqdn
+                        rpc_client.timeout = 10
+                        rpc_response = rpc_client.get_facts(:facts => backup_facts.join(', '))
+                        backup_resp = rpc_response[0]
+                        last_off_site_backup = backup_resp[:data][:values]['cloudways_backup_last_duplicity']
+                        last_db_backup = backup_resp[:data][:values]['cloudways_backup_last_mysql']
+                        last_file_backup = backup_resp[:data][:values]['cloudways_backup_last_rsnapshot']
+                    rescue Exception => e
+                        print e
+                        last_off_site_backup = ''
+                        last_db_backup = ''
+                        last_file_backup = ''
+                    end
+
                     host_list.push({:fqdn                   => resp[:data][:values]['fqdn'], 
                                     :hostname               => resp[:data][:values]['hostname'], 
                                     :roles                  => roles,
                                     :varnish_enabled        => is_varnish_enabled,
                                     :cw_roles               => cw_roles,
                                     :toggle_varnish         => toggle_varnish,
-                                    :last_off_site_backup   => resp[:data][:values]['cloudways_backup_last_duplicity'],
-                                    :last_db_backup         => resp[:data][:values]['cloudways_backup_last_mysql'],
-                                    :last_file_backup       => resp[:data][:values]['cloudways_backup_last_rsnapshot']
+                                    :last_off_site_backup   => last_off_site_backup,
+                                    :last_db_backup         => last_db_backup,
+                                    :last_file_backup       => last_file_backup
                     })
                 end
             end
