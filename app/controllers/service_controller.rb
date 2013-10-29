@@ -766,7 +766,7 @@ class ServiceController < ApplicationController
             return render :json => @response
         end
 
-        params_list = (
+        params_list = [
             'action',
             'application', 
             'application_version', 
@@ -780,10 +780,10 @@ class ServiceController < ApplicationController
             'app_fqdn',
             'customer_name', 
             'customer_email'
-        )
+        ]
 
         @is_clean = true
-        params_list.each |key| do 
+        params_list.each do |key|
             if not params.has_key?(key) or params[key].empty?
                 @is_clean = false
                 @response[:status] = -1
@@ -821,8 +821,13 @@ class ServiceController < ApplicationController
                 :customer_email         => params[:customer_email]
             )
 
-            @response[:status] = rpc_response[0][:data][:status]
-            @response[:response] = rpc_response[0][:data][:result]
+            if rpc_response.length > 0
+                @response[:status] = rpc_response[0][:data][:status]
+                @response[:response] = rpc_response[0][:data][:result]
+            else
+                @response[:status] = -1
+                @response[:response] = "No nodes discovered."
+            end
         rescue Exception => e
             @response[:status] = -2
             @response[:msg] = "API error: #{e}"
@@ -865,8 +870,13 @@ class ServiceController < ApplicationController
             end
             rpc_response = rpc_client.resize_disk(:device => device)
 
-            @response[:status] = rpc_response[0][:data][:status]
-            @response[:response] = rpc_response[0][:data][:result]
+            if rpc_response.length > 0
+                @response[:status] = rpc_response[0][:data][:status]
+                @response[:response] = rpc_response[0][:data][:result]
+            else
+                @response[:status] = -1
+                @response[:response] = "No nodes discovered."
+            end
         rescue Exception => e
             @response[:status] = -2
             @response[:msg] = "API error: #{e}"
@@ -935,8 +945,13 @@ class ServiceController < ApplicationController
                                                 :server_fqdn => server_fqdn,
                                                 :sys_user => sys_user)
 
-            @response[:status] = rpc_response[0][:data][:status]
-            @response[:response] = rpc_response[0][:data][:result]
+            if rpc_response.length > 0
+                @response[:status] = rpc_response[0][:data][:status]
+                @response[:response] = rpc_response[0][:data][:result]
+            else
+                @response[:status] = -1
+                @response[:response] = "No nodes discovered."
+            end
         rescue Exception => e
             @response[:status] = -2
             @response[:msg] = "API error: #{e}"
@@ -944,6 +959,5 @@ class ServiceController < ApplicationController
 
         render :json => @response
     end
-
 
 end
