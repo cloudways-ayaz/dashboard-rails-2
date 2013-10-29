@@ -698,8 +698,13 @@ class ServiceController < ApplicationController
             end
             rpc_response = rpc_client.on_demand()
 
-            @response[:status] = rpc_response[0][:data][:status]
-            @response[:response] = rpc_response[0][:data][:result]
+            if rpc_response.length > 0
+                @response[:status] = rpc_response[0][:data][:status]
+                @response[:response] = rpc_response[0][:data][:result]
+            else
+                @response[:status] = -1
+                @response[:response] = "No nodes discovered."
+            end
         rescue Exception => e
             @response[:status] = -2
             @response[:msg] = "API error: #{e}"
@@ -741,8 +746,13 @@ class ServiceController < ApplicationController
             end
             rpc_response = rpc_client.schedule(:frequency => frequency)
 
-            @response[:status] = rpc_response[0][:data][:status]
-            @response[:response] = rpc_response[0][:data][:result]
+            if rpc_response.length > 0
+                @response[:status] = rpc_response[0][:data][:status]
+                @response[:response] = rpc_response[0][:data][:result]
+            else
+                @response[:status] = -1
+                @response[:response] = "No nodes discovered."
+            end
         rescue Exception => e
             @response[:status] = -2
             @response[:msg] = "API error: #{e}"
