@@ -765,7 +765,7 @@ class ServiceController < ApplicationController
     #
     # API to faciliate Application installation on servers.
     # Takes in a slew of manadatory arugments, namely:
-    #   action, application, application_version, sys_user, sys_password, mysql_db_name,
+    #   app_action, application, application_version, sys_user, sys_password, mysql_db_name,
     #   mysql_user, mysql_password, app_user, app_password, app_fqdn,
     #   customer_name, customer_email
     #   customer_number, hostname
@@ -777,7 +777,7 @@ class ServiceController < ApplicationController
         end
 
         params_list = [
-            'action',
+            'app_action',
             'application', 
             'application_version', 
             'sys_user', 
@@ -816,7 +816,7 @@ class ServiceController < ApplicationController
                 rpc_client.identity_filter @hostname
             end
             rpc_response = rpc_client.install(
-                :action                 => params[:action],
+                :action                 => params[:app_action],
                 :application            => params[:application], 
                 :application_version    => params[:application_version], 
                 :sys_user               => params[:sys_user], 
