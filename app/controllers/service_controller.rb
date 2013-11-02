@@ -726,12 +726,14 @@ class ServiceController < ApplicationController
             return render :json => @response
         end
 
+        frequency = params[:frequency]
         # We take a frequency parameter which should be a positive integer.
         begin 
-            frequency = params[:frequency].to_i
+            params[:frequency].to_i
         rescue Exception => e
             @response[:status] = -1
             @response[:msg] = "Frequency not set properly."
+            return render :json => @response
         end
 
         begin
