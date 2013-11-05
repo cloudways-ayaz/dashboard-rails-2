@@ -871,13 +871,16 @@ class ServiceController < ApplicationController
             return render :json => @response
         end
 
+        # We want a longer timeout, 15 minutes long.
+        timeout = 900
+
         device = params[:device]
 
         begin
             rpc_client = rpcclient('app_installer', {:exit_on_failure => false})
             rpc_client.verbose = false
             rpc_client.progress = false
-            rpc_client.timeout = @timeout
+            rpc_client.timeout = timeout
 
             unless @customer_number.nil?
                 rpc_client.fact_filter "cloudways_customer", @customer_number
