@@ -267,6 +267,7 @@ class ServiceController < ApplicationController
     def get_host_list
         response.headers['Cache-Control'] = 'public, max-age=300'
         @customer_number = params[:customer_number]
+        @hostname = params[:hostname]
 
         if @customer_number.nil?
             @response[:status] = -1
@@ -296,6 +297,11 @@ class ServiceController < ApplicationController
             rpc_client = rpcclient('rpcutil', {:exit_on_failure => false})
             rpc_client.verbose = false
             rpc_client.fact_filter "cloudways_customer", @customer_number
+
+            unless @hostname.nil?
+                rpc_client.identity_filter @hostname
+            end
+
             rpc_client.timeout = @timeout
             rpc_client.progress = false
             f = service_facts.keys.zip(facts).flatten.compact.join(', ')
