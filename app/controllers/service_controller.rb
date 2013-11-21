@@ -10,6 +10,36 @@ class ServiceController < ApplicationController
     before_filter :init
     before_filter :authenticate
     verify :method => :post, :only => :add_customer
+    around_filter :global_request_logging
+
+    #
+    # Log the request in RequestLog table.
+    # 
+    def global_request_logging
+        keys = ['SERVER_NAME', 'REQUEST_PATH', 'HTTP_USER_AGENT',
+                'REMOTE_HOST', 'SERVER_PROTOCOL', 'SERVER_SOFTWARE',
+                'REMOTE_ADDR', 'PATH_INFO', 'SCRIPT_NAME',
+                'HTTP_VERSION', 'REQUEST_URI', 'REQUEST_METHOD',
+                'QUERY_STRING', 'GATEWAY_INTERFACE', 'HTTP_HOST',
+                'HTTP_ACCEPT']
+        headers_dict = {}
+        keys.each do |k|
+            headers_dict[k] = request.headers[k]
+        end
+
+        customer_number = params[:customer_number]
+        unless customer_number.nil?
+            customer_number = @params_verifier.get_customer_number(customer_number)
+        end
+
+        request_log = RequestLog.new(:ip              => request.remote_ip,
+                                     :server_headers  => JSON.dump(headers_dict),
+                                     :post_data       => request.raw_post.inspect,
+                                     :customer_number => customer_number
+                                    )
+        request_log.save
+        yield
+    end
 
     def authenticate
         authenticate_or_request_with_http_basic('Administration') do |username, password|
