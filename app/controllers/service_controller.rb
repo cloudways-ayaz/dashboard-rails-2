@@ -32,12 +32,16 @@ class ServiceController < ApplicationController
             customer_number = @params_verifier.get_customer_number(customer_number)
         end
 
-        request_log = RequestLog.new(:ip              => request.remote_ip,
-                                     :server_headers  => JSON.dump(headers_dict),
-                                     :post_data       => request.raw_post.inspect,
-                                     :customer_number => customer_number
-                                    )
-        request_log.save
+        begin
+            request_log = RequestLog.new(:ip              => request.remote_ip,
+                                         :server_headers  => JSON.dump(headers_dict),
+                                         :post_data       => JSON.dump(params),
+                                         :customer_number => customer_number
+                                        )
+            request_log.save
+        rescue Exception => e
+            logger.info("Exception when trying to save RequestLog: #{e}")
+        end
         yield
     end
 
