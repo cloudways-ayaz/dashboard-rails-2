@@ -999,4 +999,54 @@ class ServiceController < ApplicationController
         render :json => @response
     end
 
+
+    def get_last_backup_dates
+        facts = 'cloudways_backup_last_duplicity, cloudways_backup_last_mysql, cloudways_backup_last_rsnapshot, cloudways_last_patched, cloudways_customer'
+
+        begin
+            rpc_client = rpcclient('rpcutil', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progress = false
+            rpc_client.timeout = @timeout
+
+            rpc_response = rpc_client.get_facts(:facts => facts)
+
+            facts_result = {}
+
+            rpc_response.each do |response|
+                data = response[:data][:values]
+
+                begin
+                    cust = data['cloudways_customer']
+                rescue NoMethodError => e
+                    next
+                end
+
+                if not facts_result.has_key?(cust)
+                    facts_result[cust] = {}
+                end
+
+                begin
+                    facts_result[cust]['last_mysql_backup'] = data['cloudways_backup_last_mysql']
+                    facts_result[cust]['last_rsnapshot_backup'] = data['cloudways_backup_last_rsnapshot']
+                    facts_result[cust]['last_duplicity_backup'] = data['cloudways_backup_last_duplicity']
+                rescue NoMethodError => e
+                    next
+                end
+            end
+
+            response = {
+                :items => facts_result,
+            }
+
+            @response[:status] = 0
+            @response[:response] = response
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:msg] = "API error: #{e}"
+        end
+
+        render :json => @response
+    end
+
 end

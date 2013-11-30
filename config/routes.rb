@@ -55,6 +55,7 @@ ActionController::Routing::Routes.draw do |map|
   # items URL
   # 
   map.connect 'dashboard/get_items',    :controller => 'service', :action => 'get_dashboard_items',  :via => :get
+  map.connect 'dashboard/get_last_backup_dates',   :controller => 'service', :action => 'get_last_backup_dates', :via => :get
 
 
   #
