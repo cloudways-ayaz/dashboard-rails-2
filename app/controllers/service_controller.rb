@@ -1040,7 +1040,7 @@ class ServiceController < ApplicationController
                 :items => facts_result,
             }
 
-            @response[:status] = 0
+            @response[:status] = 1
             @response[:response] = response
         rescue Exception => e
             @response[:status] = -2
