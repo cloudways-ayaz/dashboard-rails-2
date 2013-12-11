@@ -1015,4 +1015,55 @@ class ServiceController < ApplicationController
         render :json => @response
     end
 
+
+
+    #
+    # Remove given server from Sensu, so that its monitoring data is 
+    # deleted and the server is no longer monitored.
+    #   Input: server_name (this should be the subdomain part of the server
+    #                       FQDN)
+    #          hostname  (this should be the fixed address of the sensu server)
+    def sensu_remove
+        @response = check_hostname_param
+        unless @is_clean
+            return render :json => @response
+        end
+
+        server_name = params[:server_name]
+        if server_name.nil?
+            @response[:status] = -1
+            @response[:msg] = "server_name parameter missing or empty."
+            @is_clean = false
+        end
+
+        unless @is_clean
+            return render :json => @response
+        end
+
+        begin
+            rpc_client = rpcclient('sensu', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progress = false
+            rpc_client.timeout = @timeout
+
+            rpc_client.identity_filter @hostname
+
+            rpc_response = rpc_client.remove(:server_name => server_name)
+
+            if rpc_response.length > 0
+                @response[:status] = rpc_response[0][:data][:status]
+                @response[:response] = rpc_response[0][:data][:result]
+            else
+                @response[:status] = -1
+                @response[:response] = "No nodes discovered."
+            end
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:msg] = "API error: #{e}"
+        end
+
+        render :json => @response
+
+    end
+
 end

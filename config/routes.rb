@@ -87,4 +87,10 @@ ActionController::Routing::Routes.draw do |map|
 
   map.connect 'app/add_cname',          :controller => 'service', :action => 'add_cname',           :via => :get
 
+  #
+  # Sensu URLs
+  #
+  map.connect 'sensu/remove',          :controller => 'service', :action => 'sensu_remove',       :via => :get
+
+
 end
