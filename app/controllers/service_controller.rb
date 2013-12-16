@@ -958,6 +958,7 @@ class ServiceController < ApplicationController
         cname = params[:cname]
         server_fqdn = params[:server_fqdn]
         sys_user = params[:sys_user]
+        application = params[:application]
 
         @is_clean = true
 
@@ -976,6 +977,12 @@ class ServiceController < ApplicationController
         if sys_user.nil?
             @response[:status] = -1
             @response[:msg] = "sys_user parameter missing or empty."
+            @is_clean = false
+        end
+
+        if application.nil?
+            @response[:status] = -1
+            @response[:msg] = "application parameter missing or empty."
             @is_clean = false
         end
 
@@ -998,7 +1005,8 @@ class ServiceController < ApplicationController
             end
             rpc_response = rpc_client.add_cname(:cname => cname,
                                                 :server_fqdn => server_fqdn,
-                                                :sys_user => sys_user)
+                                                :sys_user => sys_user,
+                                                :application => application)
 
             if rpc_response.length > 0
                 @response[:status] = rpc_response[0][:data][:status]
