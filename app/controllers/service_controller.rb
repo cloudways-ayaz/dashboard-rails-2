@@ -1001,7 +1001,7 @@ class ServiceController < ApplicationController
 
 
     def get_last_backup_dates
-        facts = 'cloudways_backup_last_duplicity, cloudways_backup_last_mysql, cloudways_backup_last_rsnapshot, cloudways_last_patched, cloudways_customer'
+        facts = 'cloudways_backup_last_duplicity, cloudways_backup_last_mysql, cloudways_backup_last_rsnapshot, cloudways_last_patched, cloudways_customer, fqdn'
 
         begin
             rpc_client = rpcclient('rpcutil', {:exit_on_failure => false})
@@ -1031,6 +1031,7 @@ class ServiceController < ApplicationController
                     facts_result[cust]['last_rsnapshot_backup'] = data['cloudways_backup_last_rsnapshot']
                     facts_result[cust]['last_duplicity_backup'] = data['cloudways_backup_last_duplicity']
                     facts_result[cust]['last_patched'] = data['cloudways_last_patched']
+                    facts_result[cust]['server_name'] = data['fqdn']
                 rescue NoMethodError => e
                     next
                 end
