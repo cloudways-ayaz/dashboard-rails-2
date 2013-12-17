@@ -1023,15 +1023,23 @@ class ServiceController < ApplicationController
                 end
 
                 if not facts_result.has_key?(cust)
-                    facts_result[cust] = {}
+                    facts_result[cust] = []
                 end
 
+                obj = {}
                 begin
-                    facts_result[cust]['last_mysql_backup'] = data['cloudways_backup_last_mysql']
-                    facts_result[cust]['last_rsnapshot_backup'] = data['cloudways_backup_last_rsnapshot']
-                    facts_result[cust]['last_duplicity_backup'] = data['cloudways_backup_last_duplicity']
-                    facts_result[cust]['last_patched'] = data['cloudways_last_patched']
-                    facts_result[cust]['server_name'] = data['fqdn']
+                    #facts_result[cust]['last_mysql_backup'] = data['cloudways_backup_last_mysql']
+                    #facts_result[cust]['last_rsnapshot_backup'] = data['cloudways_backup_last_rsnapshot']
+                    #facts_result[cust]['last_duplicity_backup'] = data['cloudways_backup_last_duplicity']
+                    #facts_result[cust]['last_patched'] = data['cloudways_last_patched']
+                    #facts_result[cust]['server_name'] = data['fqdn']
+
+                    obj['last_mysql_backup'] = data['cloudways_backup_last_mysql']
+                    obj['last_rsnapshot_backup'] = data['cloudways_backup_last_rsnapshot']
+                    obj['last_duplicity_backup'] = data['cloudways_backup_last_duplicity']
+                    obj['last_patched'] = data['cloudways_last_patched']
+                    obj['server_name'] = data['fqdn']
+                    facts_result[cust].push(obj)
                 rescue NoMethodError => e
                     next
                 end
