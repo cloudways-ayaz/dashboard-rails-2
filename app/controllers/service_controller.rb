@@ -1074,4 +1074,118 @@ class ServiceController < ApplicationController
 
     end
 
+
+
+    #
+    # Adds given IP into Shorewall's rules.
+    # @params: hostname
+    #          ip
+    #          server_fqdn
+    #
+    def shorewall_add_ip 
+        @response = check_hostname_param
+        unless @is_clean
+            return render :json => @response
+        end
+
+        ip = params[:ip]
+        if ip.nil?
+            @response[:status] = -1
+            @response[:msg] = "ip parameter missing or empty."
+            @is_clean = false
+        end
+
+        server_fqdn = params[:server_fqdn]
+        if server_fqdn.nil?
+            @response[:status] = -1
+            @response[:msg] = "server_fqdn parameter missing or empty."
+            @is_clean = false
+        end
+
+        unless @is_clean
+            return render :json => @response
+        end
+
+        begin
+            rpc_client = rpcclient('shorewall', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progress = false
+            rpc_client.timeout = @timeout
+
+            rpc_client.identity_filter @hostname
+
+            rpc_response = rpc_client.add_ip(:ip => ip, :server_fqdn => server_fqdn)
+
+            if rpc_response.length > 0
+                @response[:status] = rpc_response[0][:data][:status]
+                @response[:response] = rpc_response[0][:data][:result]
+            else
+                @response[:status] = -1
+                @response[:response] = "No nodes discovered."
+            end
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:msg] = "API error: #{e}"
+        end
+
+        render :json => @response
+
+    end
+
+    #
+    # Removes given IP from Shorewall's rules.
+    # @params: hostname
+    #          ip
+    #          server_fqdn
+    #
+    def shorewall_remove_ip 
+        @response = check_hostname_param
+        unless @is_clean
+            return render :json => @response
+        end
+
+        ip = params[:ip]
+        if ip.nil?
+            @response[:status] = -1
+            @response[:msg] = "ip parameter missing or empty."
+            @is_clean = false
+        end
+
+        server_fqdn = params[:server_fqdn]
+        if server_fqdn.nil?
+            @response[:status] = -1
+            @response[:msg] = "server_fqdn parameter missing or empty."
+            @is_clean = false
+        end
+
+        unless @is_clean
+            return render :json => @response
+        end
+
+        begin
+            rpc_client = rpcclient('shorewall', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progress = false
+            rpc_client.timeout = @timeout
+
+            rpc_client.identity_filter @hostname
+
+            rpc_response = rpc_client.remove_ip(:ip => ip, :server_fqdn => server_fqdn)
+
+            if rpc_response.length > 0
+                @response[:status] = rpc_response[0][:data][:status]
+                @response[:response] = rpc_response[0][:data][:result]
+            else
+                @response[:status] = -1
+                @response[:response] = "No nodes discovered."
+            end
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:msg] = "API error: #{e}"
+        end
+
+        render :json => @response
+
+    end
+
 end

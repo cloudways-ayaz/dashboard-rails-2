@@ -92,5 +92,11 @@ ActionController::Routing::Routes.draw do |map|
   #
   map.connect 'sensu/remove',          :controller => 'service', :action => 'sensu_remove',       :via => :get
 
+  #
+  # Shorewall URLs
+  #
+  map.connect 'shorewall/add_ip',      :controller => 'service', :action => 'shorewall_add_ip',     :via => :get
+  map.connect 'shorewall/remove_ip',   :controller => 'service', :action => 'shorewall_remove_ip',  :via => :get
+
 
 end
