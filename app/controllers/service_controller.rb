@@ -809,6 +809,9 @@ class ServiceController < ApplicationController
     #   customer_name, customer_email
     #   customer_number, hostname
     #
+    #   if app_action is 'install', it will install the application.
+    #   if it is 'uninstall', it will uninstall the given application.
+    #
     def app_install
         @response = check_customer_number_and_hostname_params
         unless @is_clean
