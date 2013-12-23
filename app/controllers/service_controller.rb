@@ -1124,14 +1124,14 @@ class ServiceController < ApplicationController
         ip = params[:ip]
         if ip.nil?
             @response[:status] = -1
-            @response[:msg] = "ip parameter missing or empty."
+            @response[:response] = "ip parameter missing or empty."
             @is_clean = false
         end
 
         server_fqdn = params[:server_fqdn]
         if server_fqdn.nil?
             @response[:status] = -1
-            @response[:msg] = "server_fqdn parameter missing or empty."
+            @response[:response] = "server_fqdn parameter missing or empty."
             @is_clean = false
         end
 
@@ -1158,7 +1158,7 @@ class ServiceController < ApplicationController
             end
         rescue Exception => e
             @response[:status] = -2
-            @response[:msg] = "API error: #{e}"
+            @response[:response] = "API error: #{e}"
         end
 
         render :json => @response
@@ -1180,14 +1180,14 @@ class ServiceController < ApplicationController
         ip = params[:ip]
         if ip.nil?
             @response[:status] = -1
-            @response[:msg] = "ip parameter missing or empty."
+            @response[:response] = "ip parameter missing or empty."
             @is_clean = false
         end
 
         server_fqdn = params[:server_fqdn]
         if server_fqdn.nil?
             @response[:status] = -1
-            @response[:msg] = "server_fqdn parameter missing or empty."
+            @response[:response] = "server_fqdn parameter missing or empty."
             @is_clean = false
         end
 
@@ -1214,7 +1214,7 @@ class ServiceController < ApplicationController
             end
         rescue Exception => e
             @response[:status] = -2
-            @response[:msg] = "API error: #{e}"
+            @response[:response] = "API error: #{e}"
         end
 
         render :json => @response
