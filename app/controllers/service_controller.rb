@@ -59,6 +59,7 @@ class ServiceController < ApplicationController
         @is_clean = true
         @timeout = 25
         @rpc_options = {:configfile => "/home/ayaz/.mcollective/client.cfg"}
+        @ping_timeout = 10
     end
 
     def check_params
@@ -845,6 +846,35 @@ class ServiceController < ApplicationController
                 @response[:msg] = "#{key} parameter missing or empty."
                 return render :json => @response
             end
+        end
+
+
+        # Check to see if @hostname is alive on network so as to return with an
+        # error instead of waiting 15 minutes for the call to timeout otherwise.
+        alive_flag = true
+        begin
+            r_client = rpcclient('rpcutil', {:exit_on_failure => false})
+            r_client.verbose = false
+            r_client.progress = false
+            r_client.timeout = @ping_timeout
+
+            r_client.fact_filter "cloudways_customer", @customer_number
+            r_client.identity_filter(@hostname)
+            r = r_client.ping()
+            if r.nil? or r.empty?
+                @response[:status] = -1
+                @response[:msg] = "#{@hostname} is not alive on network."
+                alive_flag = false
+            end
+
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:msg] = "API error: #{e}"
+            alive_flag = false
+        end
+
+        if not alive_flag
+            render :json => @response
         end
 
         begin
