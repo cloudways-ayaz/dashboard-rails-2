@@ -1241,7 +1241,7 @@ class ServiceController < ApplicationController
             if r.nil? or r.empty?
                 @response[:status] = -1
                 @response[:msg] = "#{hostname} is not alive on network."
-            else:
+            else
                 @response[:status] = 0
                 @response[:msg] = "Pong"
             end
