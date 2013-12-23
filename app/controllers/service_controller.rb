@@ -1240,15 +1240,15 @@ class ServiceController < ApplicationController
             r = r_client.ping()
             if r.nil? or r.empty?
                 @response[:status] = -1
-                @response[:msg] = "#{hostname} is not alive on network."
+                @response[:response] = "#{hostname} is not alive on network."
             else
                 @response[:status] = 0
-                @response[:msg] = "Pong"
+                @response[:response] = "Pong"
             end
 
         rescue Exception => e
             @response[:status] = -2
-            @response[:msg] = "API error: #{e}"
+            @response[:response] = "API error: #{e}"
         end
         render :json => @response
     end
