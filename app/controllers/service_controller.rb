@@ -843,7 +843,7 @@ class ServiceController < ApplicationController
             if not params.has_key?(key) or params[key].empty?
                 @is_clean = false
                 @response[:status] = -1
-                @response[:msg] = "#{key} parameter missing or empty."
+                @response[:response] = "#{key} parameter missing or empty."
                 return render :json => @response
             end
         end
@@ -863,13 +863,13 @@ class ServiceController < ApplicationController
             r = r_client.ping()
             if r.nil? or r.empty?
                 @response[:status] = -1
-                @response[:msg] = "#{@hostname} is not alive on network."
+                @response[:response] = "#{@hostname} is not alive on network."
                 alive_flag = false
             end
 
         rescue Exception => e
             @response[:status] = -2
-            @response[:msg] = "API error: #{e}"
+            @response[:response] = "API error: #{e}"
             alive_flag = false
         end
 
@@ -915,7 +915,7 @@ class ServiceController < ApplicationController
             end
         rescue Exception => e
             @response[:status] = -2
-            @response[:msg] = "API error: #{e}"
+            @response[:response] = "API error: #{e}"
         end
 
         render :json => @response
