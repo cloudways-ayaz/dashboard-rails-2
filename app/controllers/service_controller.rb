@@ -873,8 +873,8 @@ class ServiceController < ApplicationController
             alive_flag = false
         end
 
-        if not alive_flag
-            render :json => @response
+        unless alive_flag
+            return render :json => @response
         end
 
         begin
