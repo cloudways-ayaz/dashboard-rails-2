@@ -1221,4 +1221,36 @@ class ServiceController < ApplicationController
 
     end
 
+
+
+    def host_ping
+        hostname = request[:hostname]
+        if hostname.nil? 
+            @response[:status] = -1
+            @response[:response] = "hostname parameter missing"
+        end
+
+        begin
+            r_client = rpcclient('rpcutil', {:exit_on_failure => false})
+            r_client.verbose = false
+            r_client.progress = false
+            r_client.timeout = @ping_timeout
+
+            r_client.identity_filter(hostname)
+            r = r_client.ping()
+            if r.nil? or r.empty?
+                @response[:status] = -1
+                @response[:msg] = "#{hostname} is not alive on network."
+            else:
+                @response[:status] = 0
+                @response[:msg] = "Pong"
+            end
+
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:msg] = "API error: #{e}"
+        end
+        render :json => @response
+    end
+
 end
