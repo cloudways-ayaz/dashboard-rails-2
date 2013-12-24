@@ -262,7 +262,7 @@ class ServiceController < ApplicationController
 
                 rpc_response = rpc_client.status()
 
-                @response[:response]["status"]["varnish_enabled"] = rpc_response[0][:data][:status]
+                @response[:response]["status"]["varnish_enabled"] = rpc_response[0].results[:data][:status]
             rescue Exception => e
                 @response[:status] = -2
                 @response[:response] = "API error: #{e}"
