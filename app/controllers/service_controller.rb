@@ -214,7 +214,7 @@ class ServiceController < ApplicationController
             if @service_name.nil?
                 @response[:status] = -1
                 @response[:response] = "Incorrect service name provided: #{service_name}"
-                return @response
+                return render :json => @response
             end
             _service_list.push(service_name)
         end
