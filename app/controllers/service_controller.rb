@@ -211,7 +211,7 @@ class ServiceController < ApplicationController
         service_list.each do |service|
             service = service.strip
             service_name = @params_verifier.get_service(service)
-            if @service_name.nil?
+            if service_name.nil?
                 @response[:status] = -1
                 @response[:response] = "Incorrect service name provided: #{service_name}"
                 return render :json => @response
