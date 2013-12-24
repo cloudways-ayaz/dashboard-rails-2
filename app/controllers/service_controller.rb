@@ -248,6 +248,27 @@ class ServiceController < ApplicationController
             @response[:response] = "API error: #{e}"
         end
 
+
+        # Check whether varnish is enabled or disabled.
+        if _service_list.include?('varnish')
+            begin
+                rpc_client = rpcclient('varnish', {:exit_on_failure => false})
+                rpc_client.verbose = false
+                rpc_client.progress = false
+                rpc_client.timeout = @timeout
+
+                rpc_client.fact_filter "cloudways_customer", @customer_number
+                rpc_client.identity_filter @hostname
+
+                rpc_response = rpc_client.status()
+
+                @response[:response]["status"]["varnish_enabled"] = rpc_response[0][:data][:status]
+            rescue Exception => e
+                @response[:status] = -2
+                @response[:response] = "API error: #{e}"
+            end
+        end
+
         render :json => @response
     end
 
