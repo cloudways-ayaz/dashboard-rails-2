@@ -186,6 +186,73 @@ class ServiceController < ApplicationController
         render :json => @response
     end
 
+    #
+    # Fetch status of more than one services. 
+    #   @customer_number
+    #   @hostname
+    #   @service_list (comma-separated list of hashed service names)
+    #
+    def multi_status
+        @response = check_customer_number_and_hostname_params
+        unless @is_clean
+            return render :json => @response
+        end
+
+        service_list = params[:service_list]
+        if service_list.nil? or service_list.empty?
+            @response[:status] = -1
+            @response[:response] = "Customer number parameter missing."
+            return render :json => @response
+        end
+
+        service_list = service_list.split(',')
+        # This will contain the service names in plain-text.
+        _service_list = []
+        service_list.each do |service|
+            service = service.strip
+            service_name = @params_verifier.get_service(service)
+            if @service_name.nil?
+                @response[:status] = -1
+                @response[:response] = "Incorrect service name provided: #{service_name}"
+                return @response
+            end
+            _service_list.push(service_name)
+        end
+
+        begin
+            rpc_client = rpcclient('service', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progress = false
+            rpc_client.timeout = @timeout
+
+            unless @customer_number.nil?
+                rpc_client.fact_filter "cloudways_customer", @customer_number
+            end
+
+            unless @hostname.nil?
+                rpc_client.identity_filter @hostname
+            end
+
+            rpc_response = rpc_client.multi_status(:service_list => _service_list.join(','))
+            response = {
+                :statuscode => rpc_response[0][:statuscode],
+                :statusmsg => rpc_response[0][:statusmsg],
+                :status => rpc_response[0][:data][:status],
+                :sender => rpc_response[0][:sender]
+            }
+
+            @response[:status] = 0
+            @response[:response] = response
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:response] = "API error: #{e}"
+        end
+
+        render :json => @response
+    end
+
+
+
 
     def start
         @response = check_params
