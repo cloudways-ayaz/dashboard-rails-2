@@ -1213,14 +1213,14 @@ class ServiceController < ApplicationController
         end
 
         ip = params[:ip]
-        if ip.nil?
+        if ip.nil? or ip.empty?
             @response[:status] = -1
             @response[:response] = "ip parameter missing or empty."
             @is_clean = false
         end
 
         server_fqdn = params[:server_fqdn]
-        if server_fqdn.nil?
+        if server_fqdn.nil? or server_fqdn.empty?
             @response[:status] = -1
             @response[:response] = "server_fqdn parameter missing or empty."
             @is_clean = false
@@ -1269,14 +1269,14 @@ class ServiceController < ApplicationController
         end
 
         ip = params[:ip]
-        if ip.nil?
+        if ip.nil? or ip.empty?
             @response[:status] = -1
             @response[:response] = "ip parameter missing or empty."
             @is_clean = false
         end
 
         server_fqdn = params[:server_fqdn]
-        if server_fqdn.nil?
+        if server_fqdn.nil? or server_fqdn.empty?
             @response[:status] = -1
             @response[:response] = "server_fqdn parameter missing or empty."
             @is_clean = false
