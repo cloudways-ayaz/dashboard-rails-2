@@ -169,15 +169,20 @@ class ServiceController < ApplicationController
             end
 
             rpc_response = rpc_client.status(:service => @service_name)
-            response = {
-                :statuscode => rpc_response[0][:statuscode],
-                :statusmsg => rpc_response[0][:statusmsg],
-                :status => rpc_response[0][:data][:status],
-                :sender => rpc_response[0][:sender]
-            }
+            if rpc_response.length > 0
+                response = {
+                    :statuscode => rpc_response[0][:statuscode],
+                    :statusmsg => rpc_response[0][:statusmsg],
+                    :status => rpc_response[0][:data][:status],
+                    :sender => rpc_response[0][:sender]
+                }
 
-            @response[:status] = 0
-            @response[:response] = response
+                @response[:status] = 0
+                @response[:response] = response
+            else
+                @response[:status] = -1
+                @response[:response] = "No nodes discovered."
+            end
         rescue Exception => e
             @response[:status] = -2
             @response[:msg] = "Server error: #{e}"
