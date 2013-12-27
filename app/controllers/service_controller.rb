@@ -201,7 +201,7 @@ class ServiceController < ApplicationController
         service_list = params[:service_list]
         if service_list.nil? or service_list.empty?
             @response[:status] = -1
-            @response[:response] = "Customer number parameter missing."
+            @response[:response] = "service_list parameter missing."
             return render :json => @response
         end
 
@@ -219,6 +219,8 @@ class ServiceController < ApplicationController
             _service_list.push(service_name)
         end
 
+        status = 0
+
         begin
             rpc_client = rpcclient('service', {:exit_on_failure => false})
             rpc_client.verbose = false
@@ -234,39 +236,54 @@ class ServiceController < ApplicationController
             end
 
             rpc_response = rpc_client.multi_status(:service_list => _service_list.join(','))
-            response = {
-                :statuscode => rpc_response[0][:statuscode],
-                :statusmsg => rpc_response[0][:statusmsg],
-                :status => rpc_response[0][:data][:status],
-                :sender => rpc_response[0][:sender]
-            }
+            if rpc_response.length > 0
+                response = {
+                    :statuscode => rpc_response[0][:statuscode],
+                    :statusmsg => rpc_response[0][:statusmsg],
+                    :status => rpc_response[0][:data][:status],
+                    :sender => rpc_response[0][:sender]
+                }
 
-            @response[:status] = 0
-            @response[:response] = response
+                status = 0
+                @response[:status] = status
+                @response[:response] = response
+            else
+                status = -1
+                @response[:status] = status
+                @response[:response] = "No nodes discovered."
+            end
         rescue Exception => e
-            @response[:status] = -2
+            status = -2
+            @response[:status] = status
             @response[:response] = "API error: #{e}"
         end
 
 
-        # Check whether varnish is enabled or disabled.
-        if _service_list.include?('varnish')
-            begin
-                rpc_client = rpcclient('varnish', {:exit_on_failure => false})
-                rpc_client.verbose = false
-                rpc_client.progress = false
-                rpc_client.timeout = @timeout
+        # No point making another call for varnish daemon if the previous call
+        # didn't succeed.
+        if status == 0
 
-                rpc_client.fact_filter "cloudways_customer", @customer_number
-                rpc_client.identity_filter @hostname
+            # Check whether varnish is enabled or disabled.
+            if _service_list.include?('varnish')
+                begin
+                    rpc_client = rpcclient('varnish', {:exit_on_failure => false})
+                    rpc_client.verbose = false
+                    rpc_client.progress = false
+                    rpc_client.timeout = @timeout
 
-                rpc_response = rpc_client.status()
+                    rpc_client.fact_filter "cloudways_customer", @customer_number
+                    rpc_client.identity_filter @hostname
 
-                @response[:response]["status"]["varnish_enabled"] = rpc_response[0].results[:data][:status]
-            rescue Exception => e
-                @response[:status] = -2
-                @response[:response] = "API error: #{e}"
+                    rpc_response = rpc_client.status()
+
+                    @response[:response]["status"]["varnish_enabled"] = rpc_response[0].results[:data][:status]
+                rescue Exception => e
+                    status = -2
+                    @response[:status] = status
+                    @response[:response] = "API error: #{e}"
+                end
             end
+
         end
 
         render :json => @response
