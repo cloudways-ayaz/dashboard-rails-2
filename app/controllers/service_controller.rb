@@ -528,7 +528,7 @@ class ServiceController < ApplicationController
                 websites = facts_result["websites"].split(",")
                 websites.zip(apps).each do |el|
                     website = el[0].strip
-                    app = el[1].strip
+                    app = el[1].strip.gsub(/\t/, '')
                     if not apps_dict.has_key?(website)
                         apps_dict[website] = []
                     end
