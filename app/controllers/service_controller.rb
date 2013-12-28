@@ -457,6 +457,7 @@ class ServiceController < ApplicationController
             "location"          =>  "cloudways_region",
             "roles"             =>  "cloudways_roles",
             "websites"          =>  "cloudways_websites_list",
+            "apps"              =>  "cloudways_websites_list_app",
             "public_ip"         =>  "cloudways_public_ip",
             "os"                =>  "operatingsystem",
             "os_release"        =>  "operatingsystemrelease",
@@ -519,6 +520,23 @@ class ServiceController < ApplicationController
                     fact_value = ''
                 end
                 facts_result[fact_hash] = fact_value
+            end
+
+            if facts_result.has_key?("apps") and facts_result.has_key?("websites")
+                apps_dict = {}
+                apps = facts_result["apps"]
+                websites = facts_result["websites"]
+                websites.zip(apps).each do |el|
+                    website = el[0]
+                    app = el[1]
+                    if apps_dict.has_key?('website')
+                        apps_dict[website] = [app,]
+                    else
+                        apps_dict[website].push(app)
+                    end
+                end
+
+                facts_result['website_apps'] = apps_dict
             end
 
             response = {
