@@ -524,16 +524,15 @@ class ServiceController < ApplicationController
 
             if facts_result.has_key?("apps") and facts_result.has_key?("websites")
                 apps_dict = {}
-                apps = facts_result["apps"]
-                websites = facts_result["websites"]
+                apps = facts_result["apps"].split(",")
+                websites = facts_result["websites"].split(",")
                 websites.zip(apps).each do |el|
-                    website = el[0]
-                    app = el[1]
-                    if apps_dict.has_key?('website')
-                        apps_dict[website] = [app,]
-                    else
-                        apps_dict[website].push(app)
+                    website = el[0].strip
+                    app = el[1].strip
+                    if not apps_dict.has_key?(website)
+                        apps_dict[website] = []
                     end
+                    apps_dict[website].push(app)
                 end
 
                 facts_result['website_apps'] = apps_dict
