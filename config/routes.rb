@@ -88,4 +88,7 @@ ActionController::Routing::Routes.draw do |map|
 
   map.connect 'app/add_cname',          :controller => 'service', :action => 'add_cname',           :via => :get
 
+
+  map.connect 'apps/subscribe_upgrade', :controller => 'service', :action => 'subscribe_upgrade',   :via => :get
+
 end

@@ -964,19 +964,19 @@ class ServiceController < ApplicationController
 
         if cname.nil?
             @response[:status] = -1
-            @response[:msg] = "cname parameter missing or empty."
+            @response[:response] = "cname parameter missing or empty."
             @is_clean = false
         end
 
         if server_fqdn.nil?
             @response[:status] = -1
-            @response[:msg] = "server_fqdn parameter missing or empty."
+            @response[:response] = "server_fqdn parameter missing or empty."
             @is_clean = false
         end
 
         if sys_user.nil?
             @response[:status] = -1
-            @response[:msg] = "sys_user parameter missing or empty."
+            @response[:response] = "sys_user parameter missing or empty."
             @is_clean = false
         end
 
@@ -1010,7 +1010,7 @@ class ServiceController < ApplicationController
             end
         rescue Exception => e
             @response[:status] = -2
-            @response[:msg] = "API error: #{e}"
+            @response[:response] = "API error: #{e}"
         end
 
         render :json => @response
@@ -1064,7 +1064,47 @@ class ServiceController < ApplicationController
             @response[:response] = response
         rescue Exception => e
             @response[:status] = -2
-            @response[:msg] = "API error: #{e}"
+            @response[:response] = "API error: #{e}"
+        end
+
+        render :json => @response
+    end
+
+
+    def subscribe_upgrade
+        @response = check_customer_number_and_hostname_params
+        unless @is_clean
+            return render :json => @response
+        end
+
+        apps = params[:apps]
+        if apps.nil? or apps.empty?
+            @response[:status] = -1
+            @response[:response] = "apps parameter missing or empty."
+            return render :json => @response
+        end
+
+        begin
+            rpc_client = rpcclient('app_upgrade', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progress = false
+            rpc_client.timeout = @timeout
+
+            rpc_client.fact_filter "cloudways_customer", @customer_number
+            rpc_client.identity_filter(@hostname)
+
+            rpc_response = rpc_client.set_upgrade(:apps => apps)
+
+            if rpc_response.length > 0
+                @response[:status] = rpc_response[0][:data][:status]
+                @response[:response] = rpc_response[0][:data][:result]
+            else
+                @response[:status] = -1
+                @response[:response] = "No nodes discovered."
+            end
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:response] = "API error: #{e}"
         end
 
         render :json => @response
