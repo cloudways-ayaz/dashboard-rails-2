@@ -281,7 +281,9 @@ class ServiceController < ApplicationController
 
                     rpc_response = rpc_client.status()
 
-                    @response[:response]["status"]["varnish_enabled"] = rpc_response[0].results[:data][:status]
+                    if rpc_response.length > 0
+                        @response[:response][:status]["varnish_enabled"] = rpc_response[0].results[:data][:status]
+                    end
                 rescue Exception => e
                     status = -2
                     @response[:status] = status
