@@ -59,7 +59,7 @@ class ServiceController < ApplicationController
         @is_clean = true
         @timeout = 25
         @rpc_options = {:configfile => "/home/ayaz/.mcollective/client.cfg"}
-        @ping_timeout = 10
+        @ping_timeout = 30
     end
 
     def check_params
