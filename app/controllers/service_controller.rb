@@ -8,7 +8,7 @@ class ServiceController < ApplicationController
     PASSWORD = "cloudways123+"
     skip_before_filter :verify_authenticity_token
     before_filter :init
-    before_filter :authenticate
+    #before_filter :authenticate
     verify :method => :post, :only => :add_customer
 
     def authenticate
@@ -523,7 +523,12 @@ class ServiceController < ApplicationController
                 facts_result[fact_hash] = fact_value
             end
 
-            if facts_result.has_key?("apps") and facts_result.has_key?("websites")
+            # Probably best to set values for keys to nil as for certain cases
+            # these fields might not otherwise be present at all.
+            facts_result['website_apps'] = nil
+            facts_result['subscriptions'] = nil
+
+            if facts_result.has_key?("apps") and not facts_result["apps"].nil? and facts_result.has_key?("websites") and not facts_result["websites"].nil?
                 apps_dict = {}
                 apps = facts_result["apps"].split(",")
                 websites = facts_result["websites"].split(",")
@@ -543,8 +548,8 @@ class ServiceController < ApplicationController
                 # facts_result['website_apps'] or add a new key instead. The
                 # advantage of the latter is that it will not break existing
                 # calls.
-
-                if not upgrades.nil? and not upgrades.empty?
+                upgrades = facts_result['upgrades']
+                unless upgrades.nil? or upgrades.empty?
 
                     # This might bork if Facter.value returns nil.
                     #websites_list = websites.split(',').map { |el| el.strip }
@@ -554,32 +559,24 @@ class ServiceController < ApplicationController
 
                     upgrades_list = upgrades.split(',').map { |el| el.strip }
 
-                    subscriptions = {}
+                    unless upgrades_list.length != websites.length
 
-                    upgrades_list.each_index do |index|
-                        if upgrade_list[index] == 1
-                            subscriptions[websites[index].strip] = {'subscribed': true}  
-                        else
-                            subscriptions[websites[index].strip] = {'subscribed': false}  
+                        subscriptions = {}
+
+                        upgrades_list.each_index do |index|
+                            if upgrades_list[index] == '1'
+                                subscriptions[websites[index].strip] = {'subscribed' => true}  
+                            else
+                                subscriptions[websites[index].strip] = {'subscribed' => false}  
+                            end
                         end
+
+                        facts_result['subscriptions'] = subscriptions
                     end
-
-                    facts_result['subscriptions'] = subscriptions
                 end
-
-
-
-
 
             end
             
-
-
-
-
-
-
-
             response = {
                 :items => facts_result,
             }
