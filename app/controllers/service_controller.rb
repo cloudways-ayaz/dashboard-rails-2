@@ -8,7 +8,7 @@ class ServiceController < ApplicationController
     PASSWORD = "cloudways123+"
     skip_before_filter :verify_authenticity_token
     before_filter :init
-    #before_filter :authenticate
+    before_filter :authenticate
     verify :method => :post, :only => :add_customer
 
     def authenticate
