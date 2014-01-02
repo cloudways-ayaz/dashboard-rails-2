@@ -458,6 +458,7 @@ class ServiceController < ApplicationController
             "roles"             =>  "cloudways_roles",
             "websites"          =>  "cloudways_websites_list",
             "apps"              =>  "cloudways_websites_list_app",
+            "upgrades"          =>  "cloudways_websites_upgrade",
             "public_ip"         =>  "cloudways_public_ip",
             "os"                =>  "operatingsystem",
             "os_release"        =>  "operatingsystemrelease",
@@ -536,7 +537,48 @@ class ServiceController < ApplicationController
                 end
 
                 facts_result['website_apps'] = apps_dict
+
+
+                # Here, we could either modify the structure for
+                # facts_result['website_apps'] or add a new key instead. The
+                # advantage of the latter is that it will not break existing
+                # calls.
+
+                if not upgrades.nil? and not upgrades.empty?
+
+                    # This might bork if Facter.value returns nil.
+                    #websites_list = websites.split(',').map { |el| el.strip }
+
+                    # The default state should be n 0s for n websites.
+                    upgrade_flag_list = (0..websites.length - 1).map { |el| 0 }
+
+                    upgrades_list = upgrades.split(',').map { |el| el.strip }
+
+                    subscriptions = {}
+
+                    upgrades_list.each_index do |index|
+                        if upgrade_list[index] == 1
+                            subscriptions[websites[index].strip] = {'subscribed': true}  
+                        else
+                            subscriptions[websites[index].strip] = {'subscribed': false}  
+                        end
+                    end
+
+                    facts_result['subscriptions'] = subscriptions
+                end
+
+
+
+
+
             end
+            
+
+
+
+
+
+
 
             response = {
                 :items => facts_result,
