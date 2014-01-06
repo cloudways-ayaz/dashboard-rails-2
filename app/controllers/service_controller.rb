@@ -1116,8 +1116,10 @@ class ServiceController < ApplicationController
             return render :json => @response
         end
 
+        # We allow 'apps' to have an empty value, which is used to mean that the
+        # caller wishes to unsubscribe all apps.
         apps = params[:apps]
-        if apps.nil? or apps.empty?
+        if apps.nil?
             @response[:status] = -1
             @response[:response] = "apps parameter missing or empty."
             return render :json => @response
