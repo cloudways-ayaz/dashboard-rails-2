@@ -705,7 +705,7 @@ class ServiceController < ApplicationController
 
             response = {
                 :items => result_list,
-                :count => reslt_list.length,
+                :count => result_list.length,
             }
 
             @response[:status] = 0
