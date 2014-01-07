@@ -592,6 +592,131 @@ class ServiceController < ApplicationController
     end
 
 
+    # 
+    # Fetch a list of facts for *ALL* nodes on the mcollective number.
+    #
+    def get_dashboard_items_for_all
+        response.headers['Cache-Control'] = 'public, max-age=300'
+        facts_dict = {
+            "ram"               =>  "memorysize",
+            "ram_total"         =>  "memorytotal",
+            "cloud_provider"    =>  "cloudways_cloud",
+            "location"          =>  "cloudways_region",
+            "roles"             =>  "cloudways_roles",
+            "websites"          =>  "cloudways_websites_list",
+            "apps"              =>  "cloudways_websites_list_app",
+            "upgrades"          =>  "cloudways_websites_upgrade",
+            "public_ip"         =>  "cloudways_public_ip",
+            "os"                =>  "operatingsystem",
+            "os_release"        =>  "operatingsystemrelease",
+            "os_family"         =>  "osfamily",
+            "kernel"            =>  "kernel",
+            "kernel_release"    =>  "kernelrelease",
+            "distribution"      =>  "lsbdistdescription",
+            "procs_count"       =>  "processorcount",
+            "procs_type"        =>  "processor0",
+            "arch"              =>  "architecture",
+            "hardware_model"    =>  "hardwaremodel",
+            "uptime"            =>  "uptime",
+        }
+
+        begin
+            rpc_client = rpcclient('rpcutil', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progress = false
+            rpc_client.timeout = @timeout
+
+            facts_string = facts_dict.values.join(', ')
+            rpc_response_list = rpc_client.get_facts(:facts => facts_dict.values.join(', '))
+
+            result_list = []
+
+            rpc_response_list.each do |rpc_response|
+
+                facts_result = {}
+
+                facts_dict.each do |fact_hash, fact_name|
+                    begin
+                        fact_value = rpc_response.results[:data][:values][fact_name]
+                    rescue NoMethodError => e
+                        fact_value = ''
+                    end
+                    facts_result[fact_hash] = fact_value
+                end
+
+                # Probably best to set values for keys to nil as for certain cases
+                # these fields might not otherwise be present at all.
+                facts_result['website_apps'] = nil
+                facts_result['subscriptions'] = nil
+
+                if facts_result.has_key?("apps") and not facts_result["apps"].nil? and facts_result.has_key?("websites") and not facts_result["websites"].nil?
+                    apps_dict = {}
+                    apps = facts_result["apps"].split(",")
+                    websites = facts_result["websites"].split(",")
+                    websites.zip(apps).each do |el|
+                        website = el[0].strip
+                        app = el[1].strip.gsub(/\t/, '')
+                        if not apps_dict.has_key?(website)
+                            apps_dict[website] = []
+                        end
+                        apps_dict[website].push(app)
+                    end
+
+                    facts_result['website_apps'] = apps_dict
+
+
+                    # Here, we could either modify the structure for
+                    # facts_result['website_apps'] or add a new key instead. The
+                    # advantage of the latter is that it will not break existing
+                    # calls.
+                    upgrades = facts_result['upgrades']
+                    unless upgrades.nil? or upgrades.empty?
+
+                        # This might bork if Facter.value returns nil.
+                        #websites_list = websites.split(',').map { |el| el.strip }
+
+                        # The default state should be n 0s for n websites.
+                        upgrade_flag_list = (0..websites.length - 1).map { |el| 0 }
+
+                        upgrades_list = upgrades.split(',').map { |el| el.strip }
+
+                        unless upgrades_list.length != websites.length
+
+                            subscriptions = {}
+
+                            upgrades_list.each_index do |index|
+                                if upgrades_list[index] == '1'
+                                    subscriptions[websites[index].strip] = {'subscribed' => true}  
+                                else
+                                    subscriptions[websites[index].strip] = {'subscribed' => false}  
+                                end
+                            end
+
+                            facts_result['subscriptions'] = subscriptions
+                        end
+                    end
+
+
+                    result_list.push(facts_result)
+
+                end
+
+            end # rpc_response_list.each
+
+            response = {
+                :items => result_list,
+                :count => reslt_list.length,
+            }
+
+            @response[:status] = 0
+            @response[:response] = response
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:msg] = "API error: #{e}"
+        end
+
+        render :json => @response
+    end
 
     #
     # Enable varnish.
