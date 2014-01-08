@@ -625,8 +625,8 @@ class ServiceController < ApplicationController
             rpc_client.verbose = false
             rpc_client.progress = false
             rpc_client.timeout = @timeout
+            rpc_client.batch_sleep_time = 1
 
-            facts_string = facts_dict.values.join(', ')
             rpc_response_list = rpc_client.get_facts(:facts => facts_dict.values.join(', '))
 
             result_list = []
