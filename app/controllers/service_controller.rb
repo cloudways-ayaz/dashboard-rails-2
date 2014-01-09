@@ -618,6 +618,7 @@ class ServiceController < ApplicationController
             "arch"              =>  "architecture",
             "hardware_model"    =>  "hardwaremodel",
             "uptime"            =>  "uptime",
+            "cloudways_customer"=>  "cloudways_customer",
         }
 
         begin
