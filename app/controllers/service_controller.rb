@@ -1094,6 +1094,7 @@ class ServiceController < ApplicationController
     #   server_fqdn (must be without protocol prefix)
     #   sys_user
     #   old_cname (optional, but when present, it should be the cname to remove)
+    #   app_fqdn
     #
     def add_cname
         @response = check_customer_number_and_hostname_params
@@ -1106,6 +1107,7 @@ class ServiceController < ApplicationController
         sys_user = params[:sys_user]
         application = params[:application]
         old_cname = params[:old_cname] || ''
+        app_fqdn = params[:app_fqdn] || ''
 
         @is_clean = true
 
@@ -1154,7 +1156,8 @@ class ServiceController < ApplicationController
                                                 :server_fqdn => server_fqdn,
                                                 :sys_user => sys_user,
                                                 :application => application,
-                                                :old_cname => old_cname)
+                                                :old_cname => old_cname,
+                                                :app_fqdn => app_fqdn)
 
             if rpc_response.length > 0
                 @response[:status] = rpc_response[0][:data][:status]
