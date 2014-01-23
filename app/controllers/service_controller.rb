@@ -913,6 +913,91 @@ class ServiceController < ApplicationController
         render :json => @response
     end
 
+    #
+    # Restore backup.
+    #
+    def backup_restore
+        @response = check_customer_number_and_hostname_params
+        unless @is_clean
+            return render :json => @response
+        end
+
+        # We want a longer timeout, 15 minutes long.
+        timeout = 900
+
+        params_list = [
+            'sys_user', 
+            'server_fqdn',
+            'device'
+        ]
+
+        @is_clean = true
+        params_list.each do |key|
+            if not params.has_key?(key) or params[key].empty?
+                @is_clean = false
+                @response[:status] = -1
+                @response[:response] = "#{key} parameter missing or empty."
+                return render :json => @response
+            end
+        end
+
+        # Check to see if @hostname is alive on network so as to return with an
+        # error instead of waiting 15 minutes for the call to timeout otherwise.
+        alive_flag = true
+        begin
+            r_client = rpcclient('rpcutil', {:exit_on_failure => false})
+            r_client.verbose = false
+            r_client.progress = false
+            r_client.timeout = @ping_timeout
+
+            r_client.fact_filter "cloudways_customer", @customer_number
+            r_client.identity_filter(@hostname)
+            r = r_client.ping()
+            if r.nil? or r.empty?
+                @response[:status] = -1
+                @response[:response] = "#{@hostname} is not alive on network."
+                alive_flag = false
+            end
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:response] = "API error: #{e}"
+            alive_flag = false
+        end
+
+        unless alive_flag
+            return render :json => @response
+        end
+
+        # Call the restore action on backup agent.
+        begin
+            rpc_client = rpcclient('backup', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progress = false
+            rpc_client.timeout = timeout
+
+            rpc_client.fact_filter "cloudways_customer", @customer_number
+            rpc_client.identity_filter(@hostname)
+            rpc_response = rpc_client.restore(
+                :sys_user        => params[:sys_user], 
+                :server_fqdn     => params[:server_fqdn],
+                :device          => params[:device], 
+            )
+
+            if rpc_response.length > 0
+                @response[:status] = rpc_response[0][:data][:status]
+                @response[:response] = rpc_response[0][:data][:result]
+            else
+                @response[:status] = -1
+                @response[:response] = "No nodes discovered."
+            end
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:response] = "API error: #{e}"
+        end
+
+        render :json => @response
+    end
+
 
     #
     # API to faciliate Application installation on servers.

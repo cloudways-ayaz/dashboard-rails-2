@@ -78,6 +78,7 @@ ActionController::Routing::Routes.draw do |map|
   #
   map.connect 'backup/on_demand',       :controller => 'service', :action => 'backup_on_demand',    :via => :get
   map.connect 'backup/scheduled',       :controller => 'service', :action => 'backup_scheduled',    :via => :get
+  map.connect 'backup/restore',         :controller => 'service', :action => 'backup_restore',      :via => :get
 
   #
   # App installation URLs
