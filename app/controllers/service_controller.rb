@@ -70,19 +70,19 @@ class ServiceController < ApplicationController
 
         if @service_name.nil?
             @response[:status] = -1
-            @response[:msg] = "Service name parameter missing."
+            @response[:response] = "Service name parameter missing."
             return @response
         end
 
         if @customer_number.nil?
             @response[:status] = -1
-            @response[:msg] = "Customer number parameter missing."
+            @response[:response] = "Customer number parameter missing."
             return @response
         end
 
         if @hostname.nil?
             @response[:status] = -1
-            @response[:msg] = "Hostname parameter missing."
+            @response[:response] = "Hostname parameter missing."
             return @response
         end
 
@@ -90,14 +90,14 @@ class ServiceController < ApplicationController
         @service_name = @params_verifier.get_service(@service_name)
         if @service_name.nil?
             @response[:status] = -1
-            @response[:msg] = "Incorrect service name provided."
+            @response[:response] = "Incorrect service name provided."
             return @response
         end
 
         @customer_number = @params_verifier.get_customer_number(@customer_number)
         if @customer_number.nil?
             @response[:status] = -1
-            @response[:msg] = "Incorrect customer number provided."
+            @response[:response] = "Incorrect customer number provided."
             return @response
         end
 
@@ -112,20 +112,20 @@ class ServiceController < ApplicationController
 
         if @customer_number.nil?
             @response[:status] = -1
-            @response[:msg] = "Customer number parameter missing."
+            @response[:response] = "Customer number parameter missing."
             return @response
         end
 
         if @hostname.nil?
             @response[:status] = -1
-            @response[:msg] = "Hostname parameter missing."
+            @response[:response] = "Hostname parameter missing."
             return @response
         end
 
         @customer_number = @params_verifier.get_customer_number(@customer_number)
         if @customer_number.nil?
             @response[:status] = -1
-            @response[:msg] = "Incorrect customer number provided."
+            @response[:response] = "Incorrect customer number provided."
             return @response
         end
 
@@ -139,7 +139,7 @@ class ServiceController < ApplicationController
 
         if @hostname.nil?
             @response[:status] = -1
-            @response[:msg] = "Hostname parameter missing."
+            @response[:response] = "Hostname parameter missing."
             return @response
         end
 
@@ -185,7 +185,7 @@ class ServiceController < ApplicationController
             end
         rescue Exception => e
             @response[:status] = -2
-            @response[:msg] = "Server error: #{e}"
+            @response[:response] = "Server error: #{e}"
         end
 
         render :json => @response
@@ -318,19 +318,28 @@ class ServiceController < ApplicationController
             unless @hostname.nil?
                 rpc_client.identity_filter @hostname
             end
-            rpc_response = rpc_client.start(:service => @service_name)
-            response = {
-                :statuscode => rpc_response[0][:statuscode],
-                :statusmsg => rpc_response[0][:statusmsg],
-                :status => rpc_response[0][:data][:status],
-                :sender => rpc_response[0][:sender]
-            }
 
-            @response[:status] = 0
-            @response[:response] = response
+            rpc_response = rpc_client.start(:service => @service_name)
+            if rpc_response.length > 0
+                response = {
+                    :statuscode => rpc_response[0][:statuscode],
+                    :statusmsg => rpc_response[0][:statusmsg],
+                    :status => rpc_response[0][:data][:status],
+                    :sender => rpc_response[0][:sender]
+                }
+
+                status = 0
+                @response[:status] = status
+                @response[:response] = response
+            else
+                status = -1
+                @response[:status] = status
+                @response[:response] = "No nodes discovered."
+            end
         rescue Exception => e
-            @response[:status] = -2
-            @response[:msg] = "API error: #{e}"
+            status = -2
+            @response[:status] = status
+            @response[:response] = "API error: #{e}"
         end
 
         render :json => @response
@@ -356,18 +365,26 @@ class ServiceController < ApplicationController
                 rpc_client.identity_filter @hostname
             end
             rpc_response = rpc_client.stop(:service => @service_name)
-            response = {
-                :statuscode => rpc_response[0][:statuscode],
-                :statusmsg => rpc_response[0][:statusmsg],
-                :status => rpc_response[0][:data][:status],
-                :sender => rpc_response[0][:sender]
-            }
+            if rpc_response.length > 0
+                response = {
+                    :statuscode => rpc_response[0][:statuscode],
+                    :statusmsg => rpc_response[0][:statusmsg],
+                    :status => rpc_response[0][:data][:status],
+                    :sender => rpc_response[0][:sender]
+                }
 
-            @response[:status] = 0
-            @response[:response] = response
+                status = 0
+                @response[:status] = status
+                @response[:response] = response
+            else
+                status = -1
+                @response[:status] = status
+                @response[:response] = "No nodes discovered."
+            end
         rescue Exception => e
-            @response[:status] = -2
-            @response[:msg] = "API error: #{e}"
+            status = -2
+            @response[:status] = status
+            @response[:response] = "API error: #{e}"
         end
 
         render :json => @response
@@ -393,18 +410,26 @@ class ServiceController < ApplicationController
                 rpc_client.identity_filter @hostname
             end
             rpc_response = rpc_client.restart(:service => @service_name)
-            response = {
-                :statuscode => rpc_response[0][:statuscode],
-                :statusmsg => rpc_response[0][:statusmsg],
-                :status => rpc_response[0][:data][:status],
-                :sender => rpc_response[0][:sender]
-            }
+            if rpc_response.length > 0
+                response = {
+                    :statuscode => rpc_response[0][:statuscode],
+                    :statusmsg => rpc_response[0][:statusmsg],
+                    :status => rpc_response[0][:data][:status],
+                    :sender => rpc_response[0][:sender]
+                }
 
-            @response[:status] = 0
-            @response[:response] = response
+                status = 0
+                @response[:status] = status
+                @response[:response] = response
+            else
+                status = -1
+                @response[:status] = status
+                @response[:response] = "No nodes discovered."
+            end
         rescue Exception => e
-            @response[:status] = -2
-            @response[:msg] = "API error: #{e}"
+            status = -2
+            @response[:status] = status
+            @response[:response] = "API error: #{e}"
         end
 
         render :json => @response
@@ -677,13 +702,20 @@ class ServiceController < ApplicationController
             unless @hostname.nil?
                 rpc_client.identity_filter @hostname
             end
-            rpc_response = rpc_client.enable()
 
-            @response[:status] = rpc_response[0][:data][:status]
-            @response[:response] = rpc_response[0][:data][:result]
+            rpc_response = rpc_client.enable()
+            if rpc_response.length > 0
+                @response[:status] = rpc_response[0][:data][:status]
+                @response[:response] = rpc_response[0][:data][:result]
+            else
+                status = -1
+                @response[:status] = status
+                @response[:response] = "No nodes discovered."
+            end
         rescue Exception => e
-            @response[:status] = -2
-            @response[:msg] = "API error: #{e}"
+            status = -2
+            @response[:status] = status
+            @response[:response] = "API error: #{e}"
         end
 
         render :json => @response
@@ -711,13 +743,20 @@ class ServiceController < ApplicationController
             unless @hostname.nil?
                 rpc_client.identity_filter @hostname
             end
-            rpc_response = rpc_client.disable()
 
-            @response[:status] = rpc_response[0][:data][:status]
-            @response[:response] = rpc_response[0][:data][:result]
+            rpc_response = rpc_client.disable()
+            if rpc_response.length > 0
+                @response[:status] = rpc_response[0][:data][:status]
+                @response[:response] = rpc_response[0][:data][:result]
+            else
+                status = -1
+                @response[:status] = status
+                @response[:response] = "No nodes discovered."
+            end
         rescue Exception => e
-            @response[:status] = -2
-            @response[:msg] = "API error: #{e}"
+            status = -2
+            @response[:status] = status
+            @response[:response] = "API error: #{e}"
         end
 
         render :json => @response
@@ -745,12 +784,19 @@ class ServiceController < ApplicationController
             unless @hostname.nil?
                 rpc_client.identity_filter @hostname
             end
-            rpc_response = rpc_client.status()
 
-            @response[:status] = rpc_response[0][:data][:status]
+            rpc_response = rpc_client.status()
+            if rpc_response.length > 0
+                @response[:status] = rpc_response[0][:data][:status]
+            else
+                status = -1
+                @response[:status] = status
+                @response[:response] = "No nodes discovered."
+            end
         rescue Exception => e
-            @response[:status] = -2
-            @response[:msg] = "API error: #{e}"
+            status = -2
+            @response[:status] = status
+            @response[:response] = "API error: #{e}"
         end
 
         render :json => @response
@@ -779,12 +825,19 @@ class ServiceController < ApplicationController
             unless @hostname.nil?
                 rpc_client.identity_filter @hostname
             end
-            rpc_response = rpc_client.purge_cache()
 
-            @response[:status] = rpc_response[0][:data][:status]
+            rpc_response = rpc_client.purge_cache()
+            if rpc_response.length > 0
+                @response[:status] = rpc_response[0][:data][:status]
+            else
+                status = -1
+                @response[:status] = status
+                @response[:response] = "No nodes discovered."
+            end
         rescue Exception => e
-            @response[:status] = -2
-            @response[:msg] = "API error: #{e}"
+            status = -2
+            @response[:status] = status
+            @response[:response] = "API error: #{e}"
         end
 
         render :json => @response
@@ -812,7 +865,7 @@ class ServiceController < ApplicationController
 
         rescue Exception => e
             @response[:status] = -2
-            @response[:msg] = "API error: #{e}"
+            @response[:response] = "API error: #{e}"
         end
 
         render :json => @response
@@ -857,7 +910,7 @@ class ServiceController < ApplicationController
             end
         rescue Exception => e
             @response[:status] = -2
-            @response[:msg] = "API error: #{e}"
+            @response[:response] = "API error: #{e}"
         end
 
         render :json => @response
@@ -879,7 +932,7 @@ class ServiceController < ApplicationController
             params[:frequency].to_i
         rescue Exception => e
             @response[:status] = -1
-            @response[:msg] = "Frequency not set properly."
+            @response[:response] = "Frequency not set properly."
             return render :json => @response
         end
 
@@ -907,7 +960,7 @@ class ServiceController < ApplicationController
             end
         rescue Exception => e
             @response[:status] = -2
-            @response[:msg] = "API error: #{e}"
+            @response[:response] = "API error: #{e}"
         end
 
         render :json => @response
@@ -1131,7 +1184,7 @@ class ServiceController < ApplicationController
 
         if not params.has_key?('device') or params['device'].empty?
             @response[:status] = -1
-            @response[:msg] = "params parameter missing or empty."
+            @response[:response] = "params parameter missing or empty."
             return render :json => @response
         end
 
@@ -1164,7 +1217,7 @@ class ServiceController < ApplicationController
             end
         rescue Exception => e
             @response[:status] = -2
-            @response[:msg] = "API error: #{e}"
+            @response[:response] = "API error: #{e}"
         end
 
         render :json => @response
@@ -1198,25 +1251,25 @@ class ServiceController < ApplicationController
 
         if cname.nil?
             @response[:status] = -1
-            @response[:msg] = "cname parameter missing or empty."
+            @response[:response] = "cname parameter missing or empty."
             @is_clean = false
         end
 
         if server_fqdn.nil?
             @response[:status] = -1
-            @response[:msg] = "server_fqdn parameter missing or empty."
+            @response[:response] = "server_fqdn parameter missing or empty."
             @is_clean = false
         end
 
         if sys_user.nil?
             @response[:status] = -1
-            @response[:msg] = "sys_user parameter missing or empty."
+            @response[:response] = "sys_user parameter missing or empty."
             @is_clean = false
         end
 
         if application.nil?
             @response[:status] = -1
-            @response[:msg] = "application parameter missing or empty."
+            @response[:response] = "application parameter missing or empty."
             @is_clean = false
         end
 
@@ -1253,7 +1306,7 @@ class ServiceController < ApplicationController
             end
         rescue Exception => e
             @response[:status] = -2
-            @response[:msg] = "API error: #{e}"
+            @response[:response] = "API error: #{e}"
         end
 
         render :json => @response
@@ -1276,7 +1329,7 @@ class ServiceController < ApplicationController
         server_name = params[:server_name]
         if server_name.nil?
             @response[:status] = -1
-            @response[:msg] = "server_name parameter missing or empty."
+            @response[:response] = "server_name parameter missing or empty."
             @is_clean = false
         end
 
@@ -1303,7 +1356,7 @@ class ServiceController < ApplicationController
             end
         rescue Exception => e
             @response[:status] = -2
-            @response[:msg] = "API error: #{e}"
+            @response[:response] = "API error: #{e}"
         end
 
         render :json => @response
