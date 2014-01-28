@@ -1082,7 +1082,7 @@ class ServiceController < ApplicationController
             rpc_response = rpc_client.restore(
                 :sys_user        => params[:sys_user], 
                 :server_fqdn     => params[:server_fqdn],
-                :device          => params[:device], 
+                :device          => params[:device] 
             )
 
             if rpc_response.length > 0
