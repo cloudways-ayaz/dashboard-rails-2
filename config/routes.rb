@@ -85,7 +85,8 @@ ActionController::Routing::Routes.draw do |map|
   # App installation URLs
   #
   map.connect 'app/install',            :controller => 'service', :action => 'app_install',         :via => :get
-  map.connect 'app/uninstall',            :controller => 'service', :action => 'app_install',         :via => :get
+  map.connect 'app/uninstall',          :controller => 'service', :action => 'app_install',         :via => :get
+  map.connect 'app/status',             :controller => 'service', :action => 'app_status',          :via => :get
 
   map.connect 'app/resize_disk',        :controller => 'service', :action => 'resize_disk',         :via => :get
 

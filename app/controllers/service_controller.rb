@@ -1220,6 +1220,57 @@ class ServiceController < ApplicationController
         render :json => @response
     end
 
+
+    # API to return status of app_install and app_uninstall jobs that are running in background.
+    def app_status
+        @response = check_customer_number_and_hostname_params
+        unless @is_clean
+            return render :json => @response
+        end
+
+        pid = params[:pid]
+        operation = params[:operation]
+
+        if pid.nil? or pid.empty?
+            @response[:status] = -1
+            @response[:response] = "'pid' parameter missing or empty."
+            return render :json => @response
+        end
+
+        if operation.nil? or operation.empty?
+            @response[:status] = -1
+            @response[:response] = "'operation' parameter missing or empty."
+            return render :json => @response
+        end
+
+        begin
+            rpc_client = rpcclient('app_installer', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progress = false
+            rpc_client.timeout = @timeout
+
+            rpc_client.fact_filter "cloudways_customer", @customer_number
+            rpc_client.identity_filter @hostname
+            
+            rpc_response = rpc_client.status(:pid => pid, :operation => operation)
+
+            if rpc_response.length > 0
+                @response[:status] = rpc_response[0][:data][:status]
+                @response[:response] = rpc_response[0][:data][:result]
+            else
+                @response[:status] = -1
+                @response[:response] = "No nodes discovered."
+            end
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:response] = "API error: #{e}"
+        end
+
+        render :json => @response
+    end
+
+
+
     #
     # API call to resize disk.
     # Takes the following inputs:
