@@ -920,7 +920,6 @@ class ServiceController < ApplicationController
         end
 
         render :json => @response        
-
     end
 
 
@@ -975,6 +974,58 @@ class ServiceController < ApplicationController
         end
 
         render :json => @response        
+    end
+
+
+    # Check whether old-site backup directory exists.
+    # @params: sys_user, server_fqdn
+    def backup_exists
+        @response = check_customer_number_and_hostname_params
+        unless @is_clean
+            return render :json => @response
+        end
+
+        params_list = [
+            'sys_user', 
+            'server_fqdn'
+        ]
+
+        params_list.each do |key|
+            if not params.has_key?(key) or params[key].empty?
+                @response[:status] = -1
+                @response[:response] = "#{key} parameter missing or empty."
+                return render :json => @response
+            end
+        end
+
+        begin
+            rpc_client = rpcclient('backup', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progress = false
+            rpc_client.timeout = @timeout
+
+            unless @customer_number.nil?
+                rpc_client.fact_filter "cloudways_customer", @customer_number
+            end
+
+            rpc_client.identity_filter @hostname
+
+            rpc_response = rpc_client.backup_exists(:sys_user    => params[:sys_user],
+                                                    :server_fqdn => params[:server_fqdn])
+
+            if rpc_response.length > 0
+                @response[:status] = rpc_response[0][:data][:status]
+                @response[:response] = rpc_response[0][:data][:result]
+            else
+                @response[:status] = -1
+                @response[:response] = "No nodes discovered."
+            end
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:response] = "API error: #{e}"
+        end
+
+        render :json => @response               
     end
 
     # Rollback old-site backup.

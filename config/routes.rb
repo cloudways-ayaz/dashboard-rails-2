@@ -82,6 +82,7 @@ ActionController::Routing::Routes.draw do |map|
   map.connect 'backup/status',          :controller => 'service', :action => 'backup_status',       :via => :get
   map.connect 'backup/delete',          :controller => 'service', :action => 'backup_delete',       :via => :get
   map.connect 'backup/rollback',        :controller => 'service', :action => 'backup_rollback',     :via => :get
+  map.connect 'backup/exists',          :controller => 'service', :action => 'backup_exists',       :via => :get
 
   #
   # App installation URLs
