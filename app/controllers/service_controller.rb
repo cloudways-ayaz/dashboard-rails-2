@@ -1740,6 +1740,112 @@ class ServiceController < ApplicationController
     end
 
 
+    # Add customer's public IP to shorewall's macro.SIAB file.
+    # @params: ip, server_fqdn
+    def siab_add_ip
+        @response = check_customer_number_and_hostname_params
+        unless @is_clean
+            return render :json => @response
+        end
+
+        params_list = [
+            'ip', 
+            'server_fqdn'
+        ]
+
+        params_list.each do |key|
+            if not params.has_key?(key) or params[key].empty?
+                @response[:status] = -1
+                @response[:response] = "#{key} parameter missing or empty."
+                return render :json => @response
+            end
+        end
+
+        ip = params[:ip]
+        server_fqdn = params[:server_fqdn]
+
+
+        begin
+            rpc_client = rpcclient('siab', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progress = false
+            rpc_client.timeout = @timeout
+
+            unless @customer_number.nil?
+                rpc_client.fact_filter "cloudways_customer", @customer_number
+            end
+            rpc_client.identity_filter @hostname
+
+            rpc_response = rpc_client.add_ip(:ip => ip, :server_fqdn => server_fqdn)
+
+            if rpc_response.length > 0
+                @response[:status] = rpc_response[0][:data][:status]
+                @response[:response] = rpc_response[0][:data][:result]
+            else
+                @response[:status] = -1
+                @response[:response] = "No nodes discovered."
+            end
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:response] = "API error: #{e}"
+        end
+
+        render :json => @response
+    end
+
+    # Remove customer's public IP to shorewall's macro.SIAB file.
+    # @params: ip, server_fqdn
+    def siab_remove_ip
+        @response = check_customer_number_and_hostname_params
+        unless @is_clean
+            return render :json => @response
+        end
+
+        params_list = [
+            'ip', 
+            'server_fqdn'
+        ]
+
+        @is_clean = true
+        params_list.each do |key|
+            if not params.has_key?(key) or params[key].empty?
+                @response[:status] = -1
+                @response[:response] = "#{key} parameter missing or empty."
+                return render :json => @response
+            end
+        end
+
+        ip = params[:ip]
+        server_fqdn = params[:server_fqdn]        
+
+        begin
+            rpc_client = rpcclient('siab', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progress = false
+            rpc_client.timeout = @timeout
+
+            unless @customer_number.nil?
+                rpc_client.fact_filter "cloudways_customer", @customer_number
+            end
+            rpc_client.identity_filter @hostname
+
+            rpc_response = rpc_client.remove_ip(:ip => ip, :server_fqdn => server_fqdn)
+
+            if rpc_response.length > 0
+                @response[:status] = rpc_response[0][:data][:status]
+                @response[:response] = rpc_response[0][:data][:result]
+            else
+                @response[:status] = -1
+                @response[:response] = "No nodes discovered."
+            end
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:response] = "API error: #{e}"
+        end
+
+        render :json => @response        
+    end
+
 
     def host_ping
         hostname = request[:hostname]

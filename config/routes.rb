@@ -106,6 +106,12 @@ ActionController::Routing::Routes.draw do |map|
   map.connect 'shorewall/add_ip',      :controller => 'service', :action => 'shorewall_add_ip',     :via => :get
   map.connect 'shorewall/remove_ip',   :controller => 'service', :action => 'shorewall_remove_ip',  :via => :get
 
+
+  # SIAB URLs
+  map.connect 'siab/add_ip',      :controller => 'service', :action => 'siab_add_ip',     :via => :get
+  map.connect 'siab/remove_ip',   :controller => 'service', :action => 'siab_remove_ip',  :via => :get
+
+
   #
   # Ping URL
   map.connect 'host/ping',             :controller => 'service', :action => 'host_ping',            :via => :get
