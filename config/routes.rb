@@ -115,5 +115,6 @@ ActionController::Routing::Routes.draw do |map|
   #
   # Ping URL
   map.connect 'host/ping',             :controller => 'service', :action => 'host_ping',            :via => :get
+  map.connect 'host/alive',            :controller => 'service', :action => 'host_alive',           :via => :get
 
 end

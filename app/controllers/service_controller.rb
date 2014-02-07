@@ -1877,4 +1877,38 @@ class ServiceController < ApplicationController
         render :json => @response
     end
 
+    # Run a get_fact call against target hostname, and if the call times out, 
+    # the server is not alive on network. This is different from host_ping API 
+    # call, in that, it caters to edge-cases where servers may respond to ping 
+    # requests but may actually be stuck in a rut and not respond to any other
+    # rpc calls.
+    def host_alive
+        hostname = request[:hostname]
+        if hostname.nil? 
+            @response[:status] = -1
+            @response[:response] = "hostname parameter missing"
+        end
+
+        begin
+            r_client = rpcclient('rpcutil', {:exit_on_failure => false})
+            r_client.verbose = false
+            r_client.progress = false
+            r_client.timeout = 10
+
+            r_client.identity_filter(hostname)
+            rpc_response = r_client.get_fact(:fact => 'fqdn')
+            if rpc_response.length > 0
+                @response[:status] = 0
+                @response[:response] = "Alive"
+            else
+                @response[:status] = -1
+                @response[:response] = "#{hostname} is not alive on network."
+            end
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:response] = "API error: #{e}"
+        end
+        render :json => @response
+    end
+
 end
