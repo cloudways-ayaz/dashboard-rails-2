@@ -12,7 +12,10 @@ class ServiceController < ApplicationController
     verify :method => :post, :only => :add_customer
     around_filter :global_request_logging
 
-    #
+    # ---
+    # :section: Internal
+    # ---
+    
     # Log the request in RequestLog table.
     # 
     def global_request_logging
@@ -45,6 +48,7 @@ class ServiceController < ApplicationController
         yield
     end
 
+    # HTTP Basic authentication. 
     def authenticate
         authenticate_or_request_with_http_basic('Administration') do |username, password|
             @params_verifier.verify_auth(username, password)
@@ -62,6 +66,7 @@ class ServiceController < ApplicationController
         @ping_timeout = 30
     end
 
+    # Check for the following parameters in params variable: +service_name+, +customer_number+, +hostname+
     def check_params
         @is_clean = false
         @service_name = params[:service_name]
@@ -105,6 +110,7 @@ class ServiceController < ApplicationController
         @response
     end
 
+    # Check whether +customer_number+ and +hostname+ parameters are available.
     def check_customer_number_and_hostname_params
         @is_clean = false
         @customer_number = params[:customer_number]
@@ -133,6 +139,7 @@ class ServiceController < ApplicationController
         @response
     end
 
+    # Chether whether +hostname+ parameter is available.
     def check_hostname_param
         @is_clean = false
         @hostname = params[:hostname]
@@ -148,6 +155,18 @@ class ServiceController < ApplicationController
     end
 
 
+    #---
+    # :section: Service
+    # Calls for interacting with system services.
+    #---
+   
+    #
+    # Check status of given +service_name+. 
+    #   INPUT:
+    #       service_name
+    #       customer_number
+    #       hostname
+    #
     def status
         @response = check_params
         unless @is_clean
@@ -192,10 +211,11 @@ class ServiceController < ApplicationController
     end
 
     #
-    # Fetch status of more than one services. 
-    #   @customer_number
-    #   @hostname
-    #   @service_list (comma-separated list of hashed service names)
+    # Fetch status of more than one service. 
+    #   INPUT:
+    #       customer_number 
+    #       hostname 
+    #       service_list (comma-separated list of hashed service names)
     #
     def multi_status
         @response = check_customer_number_and_hostname_params
@@ -298,7 +318,13 @@ class ServiceController < ApplicationController
 
 
 
-
+    #
+    # Start the given +service_name+
+    #   INPUT:
+    #       customer_number
+    #       service_name
+    #       hostname
+    #       
     def start
         @response = check_params
         unless @is_clean
@@ -345,6 +371,13 @@ class ServiceController < ApplicationController
         render :json => @response
     end
 
+    #
+    # Stop the given +service_name+
+    #   INPUT:
+    #       customer_number
+    #       service_name
+    #       hostname
+    #       
     def stop
         @response = check_params
         unless @is_clean
@@ -390,6 +423,13 @@ class ServiceController < ApplicationController
         render :json => @response
     end
 
+    #
+    # Restart the given +service_name+
+    #   INPUT:
+    #       customer_number
+    #       service_name
+    #       hostname
+    #
     def restart
         @response = check_params
         unless @is_clean
@@ -436,6 +476,15 @@ class ServiceController < ApplicationController
     end
 
 
+    # ---
+    # :section: Deprecated
+    # These calls are not used by CG.
+    # ---
+    
+    # Get a list of hosts on Mcollective network. 
+    #   INPUT:
+    #       customer_number
+    #
     def get_host_list
         response.headers['Cache-Control'] = 'public, max-age=300'
         @customer_number = params[:customer_number]
@@ -551,46 +600,12 @@ class ServiceController < ApplicationController
         render :json => @response
     end
 
-    #
-    # Add a new customer_number and its hash to the JSON file that stores
-    # customer numbers.
-    # Input: customer_number
-    #
-    def add_customer
-        customer_number = params[:customer_number]
-
-        if customer_number.nil?
-            @response[:status] = -1
-            @response[:msg] = "Customer number parameter missing."
-            return render :json => @response
-        end
-        customer_number_hash = MD5.new(customer_number).hexdigest
-
-        status = @params_verifier.add_customer(customer_number, customer_number_hash)
-
-        if status
-            begin
-                @params_verifier.write_params_to_file()
-            rescue Exception => e
-                @response[:status] = -2
-                @response[:msg] = "Failed to update customer. #{e}"
-            else
-                @response[:status] = 0
-                @response[:msg] = "Customer added"
-            end
-        else
-            @response[:status] = -1
-            @response[:msg] = "Customer already present."
-        end
-
-        render :json => @response
-    end
-
 
     #
     # Return selected facts values.
-    # Input: hostname, customer_number_hash
-    # 
+    #   Input:
+    #       hostname
+    #       customer_number
     def get_dashboard_items
         response.headers['Cache-Control'] = 'public, max-age=300'
         facts_dict = {
@@ -679,10 +694,61 @@ class ServiceController < ApplicationController
     end
 
 
+    # ---
+    # :section: Customer
+    # Call to add customer.
+    # ---
+    
+    # Add a new customer_number and its hash to the JSON file that stores
+    # customer numbers.
+    #   INPUT: 
+    #       customer_number
+    #
+    # In this particular call, the value of +customer_number+ should be a
+    # five-digit number.
+    #
+    def add_customer
+        customer_number = params[:customer_number]
 
+        if customer_number.nil?
+            @response[:status] = -1
+            @response[:msg] = "Customer number parameter missing."
+            return render :json => @response
+        end
+        customer_number_hash = MD5.new(customer_number).hexdigest
+
+        status = @params_verifier.add_customer(customer_number, customer_number_hash)
+
+        if status
+            begin
+                @params_verifier.write_params_to_file()
+            rescue Exception => e
+                @response[:status] = -2
+                @response[:msg] = "Failed to update customer. #{e}"
+            else
+                @response[:status] = 0
+                @response[:msg] = "Customer added"
+            end
+        else
+            @response[:status] = -1
+            @response[:msg] = "Customer already present."
+        end
+
+        render :json => @response
+    end
+
+
+    # ---
+    # :section: Varnish
+    # Actions that interact with Varnish.
+    # ----
+    
     #
     # Enable varnish.
-    # 
+    #   INPUT:
+    #       customer_number
+    #       hostname
+    #
     def varnish_enable
         @response = check_customer_number_and_hostname_params
         unless @is_clean
@@ -723,6 +789,9 @@ class ServiceController < ApplicationController
 
     #
     # Disable varnish
+    #   INPUT:
+    #       customer_number
+    #       hostname
     #
     def varnish_disable
         @response = check_customer_number_and_hostname_params
@@ -764,6 +833,13 @@ class ServiceController < ApplicationController
     
     #
     # Check varnish enable/disable status
+    #   INPUT:
+    #       customer_number
+    #       hostname
+    #
+    # This does not check the status of varnish as a service. It only checks
+    # whether varnish is disabled or enabled on the system, based on a setting
+    # inside a particular config file.
     #
     def varnish_status
         @response = check_customer_number_and_hostname_params
@@ -805,6 +881,9 @@ class ServiceController < ApplicationController
 
     #
     # Purge varnish cache. 
+    #   INPUT:
+    #       customer_number
+    #       hostname
     #
     def varnish_purge_cache
         @response = check_customer_number_and_hostname_params
@@ -844,37 +923,23 @@ class ServiceController < ApplicationController
     end
 
 
-    #
-    # Return total number of customer servers available on MCollective network.
-    #
-    def servers_count
-        response.headers['Cache-Control'] = 'public, max-age=300'
-        begin
-            rpc_client = rpcclient('rpcutil', {:exit_on_failure => false})
-            rpc_client.verbose = false
-            rpc_client.progress = false
-            rpc_client.timeout = @timeout
-
-            total_servers = rpc_client.ping().length()
-
-            rpc_client.fact_filter("cloudways_customer", "00000")
-            test_servers = rpc_client.ping().length()
-
-            @response[:status] = 1
-            @response[:servers_count] = total_servers - test_servers
-
-        rescue Exception => e
-            @response[:status] = -2
-            @response[:response] = "API error: #{e}"
-        end
-
-        render :json => @response
-    end
 
 
+    # ---
+    # :section: Backup
+    # Various backup calls.
+    # ---
+    
     #
     # Return status of background jobs.
-    # Takes @pid and @operation (which can be backup or restore)
+    #   INPUT:
+    #       customer_number
+    #       hostname
+    #       pid
+    #       operation
+    #
+    # Takes @pid and @operation (which can be backup or restore).
+    #
     def backup_status
         @response = check_customer_number_and_hostname_params
         unless @is_clean
@@ -923,8 +988,14 @@ class ServiceController < ApplicationController
     end
 
 
+    #
     # Delete old-site backup directory, if present.
-    # @params: sys_user, server_fqdn
+    #   INPUT:
+    #       customer_number
+    #       hostname
+    #       sys_user
+    #       server_fqdn
+    #
     def backup_delete
         @response = check_customer_number_and_hostname_params
         unless @is_clean
@@ -973,12 +1044,18 @@ class ServiceController < ApplicationController
             @response[:response] = "API error: #{e}"
         end
 
-        render :json => @response        
+        render :json => @response
     end
 
 
+    #
     # Check whether old-site backup directory exists.
-    # @params: sys_user, server_fqdn
+    #   INPUT:
+    #       customer_number
+    #       hostname
+    #       sys_user
+    #       server_fqdn
+    #
     def backup_exists
         @response = check_customer_number_and_hostname_params
         unless @is_clean
@@ -1025,11 +1102,20 @@ class ServiceController < ApplicationController
             @response[:response] = "API error: #{e}"
         end
 
-        render :json => @response               
+        render :json => @response
     end
 
+    #
     # Rollback old-site backup.
-    # @params: sys_user, server_fqdn
+    #   INPUT:
+    #       customer_number
+    #       hostname
+    #       sys_user
+    #       server_fqdn
+    #
+    # This call runs as a background job. The caller is required to periodically call
+    # backup_status to fetch the status of the job.
+    # 
     def backup_rollback
         @response = check_customer_number_and_hostname_params
         unless @is_clean
@@ -1085,6 +1171,12 @@ class ServiceController < ApplicationController
 
     #
     # On demand backup. 
+    #   INPUT:
+    #       customer_number
+    #       hostname
+    #
+    # This call runs as a background job. The caller is required to periodically call
+    # backup_status to fetch the status of the job.
     #
     def backup_on_demand
         @response = check_customer_number_and_hostname_params
@@ -1127,7 +1219,10 @@ class ServiceController < ApplicationController
 
     #
     # Schedule backup.
-    # Takes 'frequency' input parameter.
+    #   INPUT:
+    #       customer_number
+    #       hostname
+    #       frequency
     #
     def backup_scheduled
         @response = check_customer_number_and_hostname_params
@@ -1177,6 +1272,12 @@ class ServiceController < ApplicationController
 
     #
     # Restore backup.
+    #   INPUT:
+    #       customer_number
+    #       hostname
+    #       sys_user
+    #       server_fqdn
+    #       device
     #
     def backup_restore
         @response = check_customer_number_and_hostname_params
@@ -1261,16 +1362,34 @@ class ServiceController < ApplicationController
     end
 
 
+    # ---
+    # :section: Application installation
+    # ---
+    
     #
     # API to faciliate Application installation on servers.
-    # Takes in a slew of manadatory arugments, namely:
-    #   app_action, application, application_version, sys_user, sys_password, mysql_db_name,
-    #   mysql_user, mysql_password, app_user, app_password, app_fqdn,
-    #   customer_name, customer_email
-    #   customer_number, hostname
+    #   INPUT:
+    #       app_action
+    #       application
+    #       application_version
+    #       sys_user
+    #       sys_password
+    #       mysql_db_name
+    #       mysql_user
+    #       mysql_password
+    #       app_user
+    #       app_password
+    #       app_fqdn
+    #       customer_name
+    #       customer_email
+    #       customer_number
+    #       hostname
     #
-    #   if app_action is 'install', it will install the application.
-    #   if it is 'uninstall', it will uninstall the given application.
+    # If +app_action+ is +install+, it will install the application.
+    # If it is +uninstall+, it will uninstall the given application.
+    #
+    # This call runs as a background job. The caller should periodically call
+    # app_status to find out the status of the job.
     #
     def app_install
         @response = check_customer_number_and_hostname_params
@@ -1381,7 +1500,14 @@ class ServiceController < ApplicationController
     end
 
 
-    # API to return status of app_install and app_uninstall jobs that are running in background.
+    #
+    # Return status of app_install and app_uninstall jobs that are running in background.
+    #   INPUT:
+    #       customer_number
+    #       hostname
+    #       pid
+    #       operation
+    #
     def app_status
         @response = check_customer_number_and_hostname_params
         unless @is_clean
@@ -1430,11 +1556,12 @@ class ServiceController < ApplicationController
     end
 
 
-
     #
     # API call to resize disk.
-    # Takes the following inputs:
-    #   customer_number, hostname, device
+    #   INPUT:
+    #       customer_number
+    #       hostname
+    #       device
     #
     def resize_disk
         @response = check_customer_number_and_hostname_params
@@ -1483,16 +1610,20 @@ class ServiceController < ApplicationController
         render :json => @response
     end
 
+    # ---
+    # :section: CName
+    # ---
 
     #
     # This API adds a new CNAME.
-    # It takes the following parameters:
-    #   customer_number, hostname
-    #   cname (must be without protocol prefix)
-    #   server_fqdn (must be without protocol prefix)
-    #   sys_user
-    #   old_cname (optional, but when present, it should be the cname to remove)
-    #   app_fqdn
+    #   INPUT:
+    #       customer_number
+    #       hostname
+    #       cname (must be without protocol prefix)
+    #       server_fqdn (must be without protocol prefix)
+    #       sys_user
+    #       old_cname (optional, but when present, it should be the cname to remove)
+    #       app_fqdn
     #
     def add_cname
         @response = check_customer_number_and_hostname_params
@@ -1573,13 +1704,18 @@ class ServiceController < ApplicationController
     end
 
 
+    # ---
+    # :section: Sensu
+    # Calls for interacting with Sensu
+    # ---
 
     #
     # Remove given server from Sensu, so that its monitoring data is 
     # deleted and the server is no longer monitored.
-    #   Input: server_name (this should be the subdomain part of the server
-    #                       FQDN)
-    #          hostname  (this should be the fixed address of the sensu server)
+    #   Input: 
+    #       server_name (this should be the subdomain part of the server FQDN)
+    #       hostname  (this should be the fixed address of the sensu server)
+    #
     def sensu_remove
         @response = check_hostname_param
         unless @is_clean
@@ -1624,12 +1760,17 @@ class ServiceController < ApplicationController
     end
 
 
+    # ---
+    # :section: Shorewall
+    # Calls for interacting with Shorewall.
+    # ---
 
     #
     # Adds given IP into Shorewall's rules.
-    # @params: hostname
-    #          ip
-    #          server_fqdn
+    #   INPUT:
+    #       hostname
+    #       ip
+    #       server_fqdn
     #
     def shorewall_add_ip 
         @response = check_hostname_param
@@ -1684,9 +1825,10 @@ class ServiceController < ApplicationController
 
     #
     # Removes given IP from Shorewall's rules.
-    # @params: hostname
-    #          ip
-    #          server_fqdn
+    #   INPUT:
+    #       hostname
+    #       ip
+    #       server_fqdn
     #
     def shorewall_remove_ip 
         @response = check_hostname_param
@@ -1740,8 +1882,19 @@ class ServiceController < ApplicationController
     end
 
 
+    # ---
+    # :section: Shell In A Box
+    # Calls for interacting with Shell In A Box.
+    # ---
+
+    #
     # Add customer's public IP to shorewall's macro.SIAB file.
-    # @params: ip, server_fqdn
+    #   INPUT:
+    #       customer_number
+    #       hostname
+    #       ip (customer's public IP)
+    #       server_fqdn
+    #
     def siab_add_ip
         @response = check_customer_number_and_hostname_params
         unless @is_clean
@@ -1793,8 +1946,14 @@ class ServiceController < ApplicationController
         render :json => @response
     end
 
+    #
     # Remove customer's public IP to shorewall's macro.SIAB file.
-    # @params: ip, server_fqdn
+    #   INPUT:
+    #       customer_number
+    #       hostname
+    #       ip
+    #       server_fqdn
+    #
     def siab_remove_ip
         @response = check_customer_number_and_hostname_params
         unless @is_clean
@@ -1847,6 +2006,18 @@ class ServiceController < ApplicationController
     end
 
 
+
+    # ---
+    # :section: Utility
+    # These are various utility calls.
+    # ---
+
+    #
+    # Check whether +hostname+ is alive on MCollective network by sending it a
+    # ping request.
+    #   INPUT:
+    #       hostname
+    #
     def host_ping
         hostname = request[:hostname]
         if hostname.nil? 
@@ -1877,11 +2048,14 @@ class ServiceController < ApplicationController
         render :json => @response
     end
 
-    # Run a get_fact call against target hostname, and if the call times out, 
+    #
+    # Run a get_fact call against target +hostname+, and if the call times out, 
     # the server is not alive on network. This is different from host_ping API 
     # call, in that, it caters to edge-cases where servers may respond to ping 
     # requests but may actually be stuck in a rut and not respond to any other
     # rpc calls.
+    #   INPUT:
+    #       hostname
     def host_alive
         hostname = request[:hostname]
         if hostname.nil? 
@@ -1908,6 +2082,33 @@ class ServiceController < ApplicationController
             @response[:status] = -2
             @response[:response] = "API error: #{e}"
         end
+        render :json => @response
+    end
+    
+    #
+    # Return total number of customer servers available on MCollective network.
+    #
+    def servers_count
+        response.headers['Cache-Control'] = 'public, max-age=300'
+        begin
+            rpc_client = rpcclient('rpcutil', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progress = false
+            rpc_client.timeout = @timeout
+
+            total_servers = rpc_client.ping().length()
+
+            rpc_client.fact_filter("cloudways_customer", "00000")
+            test_servers = rpc_client.ping().length()
+
+            @response[:status] = 1
+            @response[:servers_count] = total_servers - test_servers
+
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:response] = "API error: #{e}"
+        end
+
         render :json => @response
     end
 
