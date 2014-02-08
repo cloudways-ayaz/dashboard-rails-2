@@ -1184,14 +1184,11 @@ class ServiceController < ApplicationController
             return render :json => @response
         end
 
-        # Longer timeout, 15 minutes.
-        timeout = 900
-
         begin
             rpc_client = rpcclient('backup', {:exit_on_failure => false})
             rpc_client.verbose = false
             rpc_client.progress = false
-            rpc_client.timeout = timeout
+            rpc_client.timeout = @timeout
 
             unless @customer_number.nil?
                 rpc_client.fact_filter "cloudways_customer", @customer_number
@@ -1285,9 +1282,6 @@ class ServiceController < ApplicationController
             return render :json => @response
         end
 
-        # We want a longer timeout, 15 minutes long.
-        timeout = 900
-
         params_list = [
             'sys_user', 
             'server_fqdn',
@@ -1336,7 +1330,7 @@ class ServiceController < ApplicationController
             rpc_client = rpcclient('backup', {:exit_on_failure => false})
             rpc_client.verbose = false
             rpc_client.progress = false
-            rpc_client.timeout = timeout
+            rpc_client.timeout = @timeout
 
             rpc_client.fact_filter "cloudways_customer", @customer_number
             rpc_client.identity_filter(@hostname)
@@ -1397,9 +1391,6 @@ class ServiceController < ApplicationController
             return render :json => @response
         end
 
-        # We want a longer timeout, 15 minutes long.
-        timeout = 900
-
         params_list = [
             'app_action',
             'application', 
@@ -1459,7 +1450,7 @@ class ServiceController < ApplicationController
             rpc_client = rpcclient('app_installer', {:exit_on_failure => false})
             rpc_client.verbose = false
             rpc_client.progress = false
-            rpc_client.timeout = timeout
+            rpc_client.timeout = @timeout
 
             unless @customer_number.nil?
                 rpc_client.fact_filter "cloudways_customer", @customer_number
