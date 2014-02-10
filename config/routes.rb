@@ -90,10 +90,9 @@ ActionController::Routing::Routes.draw do |map|
   map.connect 'app/install',            :controller => 'service', :action => 'app_install',         :via => :get
   map.connect 'app/uninstall',          :controller => 'service', :action => 'app_install',         :via => :get
   map.connect 'app/status',             :controller => 'service', :action => 'app_status',          :via => :get
-
   map.connect 'app/resize_disk',        :controller => 'service', :action => 'resize_disk',         :via => :get
-
   map.connect 'app/add_cname',          :controller => 'service', :action => 'add_cname',           :via => :get
+  map.connect 'app/papply',             :controller => 'service', :action => 'app_papply',          :via => :get
 
   #
   # Sensu URLs
@@ -105,6 +104,7 @@ ActionController::Routing::Routes.draw do |map|
   #
   map.connect 'shorewall/add_ip',      :controller => 'service', :action => 'shorewall_add_ip',     :via => :get
   map.connect 'shorewall/remove_ip',   :controller => 'service', :action => 'shorewall_remove_ip',  :via => :get
+  map.connect 'shorewall/status',      :controller => 'service', :action => 'shorewall_status',     :via => :get
 
 
   # SIAB URLs

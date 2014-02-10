@@ -1497,6 +1497,50 @@ class ServiceController < ApplicationController
         render :json => @response
     end
 
+    #
+    # Calls puppet apply on the server to re-read MySQL configuration.
+    #   INPUT:
+    #       customer_number
+    #       hostname
+    #
+    # This call runs in the background. The caller should call the app_status API to 
+    # retrieve the status of the job.
+    #
+    def app_papply
+        @response = check_customer_number_and_hostname_params
+        unless @is_clean
+            return render :json => @response
+        end
+
+        begin
+            rpc_client = rpcclient('app_installer', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progress = false
+            rpc_client.timeout = @timeout
+
+            unless @customer_number.nil?
+                rpc_client.fact_filter "cloudways_customer", @customer_number
+            end
+
+            unless @hostname.nil?
+                rpc_client.identity_filter @hostname
+            end
+            rpc_response = rpc_client.papply()
+
+            if rpc_response.length > 0
+                @response[:status] = rpc_response[0][:data][:status]
+                @response[:response] = rpc_response[0][:data][:result]
+            else
+                @response[:status] = -1
+                @response[:response] = "No nodes discovered."
+            end
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:response] = "API error: #{e}"
+        end
+
+        render :json => @response
+    end
 
     #
     # Return status of app_install and app_uninstall jobs that are running in background.
@@ -1770,6 +1814,9 @@ class ServiceController < ApplicationController
     #       ip
     #       server_fqdn
     #
+    # This runs as a background job. The caller should call shorewall_status to 
+    # fetch status  of background job.
+    #    
     def shorewall_add_ip 
         @response = check_hostname_param
         unless @is_clean
@@ -1798,8 +1845,7 @@ class ServiceController < ApplicationController
             rpc_client = rpcclient('shorewall', {:exit_on_failure => false})
             rpc_client.verbose = false
             rpc_client.progress = false
-            # The shorewall agent has 300 seconds for timeout.
-            rpc_client.timeout = 300
+            rpc_client.timeout = @timeout
 
             rpc_client.identity_filter @hostname
 
@@ -1818,7 +1864,6 @@ class ServiceController < ApplicationController
         end
 
         render :json => @response
-
     end
 
     #
@@ -1827,6 +1872,9 @@ class ServiceController < ApplicationController
     #       hostname
     #       ip
     #       server_fqdn
+    #
+    # This runs as a background job. The caller should call shorewall_status to 
+    # fetch status  of background job.
     #
     def shorewall_remove_ip 
         @response = check_hostname_param
@@ -1856,8 +1904,7 @@ class ServiceController < ApplicationController
             rpc_client = rpcclient('shorewall', {:exit_on_failure => false})
             rpc_client.verbose = false
             rpc_client.progress = false
-            # The shorewall agent has 300 seconds for timeout.
-            rpc_client.timeout = 300
+            rpc_client.timeout = @timeout
 
             rpc_client.identity_filter @hostname
 
@@ -1877,6 +1924,60 @@ class ServiceController < ApplicationController
 
         render :json => @response
 
+    end
+
+
+    # 
+    # Check status of Shorewall background jobs.
+    #   INPUT:
+    #       hostname
+    #       ip
+    #       server_fqdn
+    #
+    def shorewall_status
+        @response = check_hostname_param
+        unless @is_clean
+            return render :json => @response
+        end
+
+        pid = params[:pid]
+        operation = params[:operation]
+
+        if pid.nil? or pid.empty?
+            @response[:status] = -1
+            @response[:response] = "'pid' parameter missing or empty."
+            return render :json => @response            
+        end
+
+        if operation.nil? or operation.empty?
+            @response[:status] = -1
+            @response[:response] = "'operation' parameter missing or empty."
+            return render :json => @response            
+        end        
+
+        begin
+            rpc_client = rpcclient('shorewall', {:exit_on_failure => false})
+            rpc_client.verbose = false
+            rpc_client.progress = false
+            rpc_client.timeout = @timeout
+
+            rpc_client.identity_filter @hostname
+            
+            rpc_response = rpc_client.status(:pid => pid, :operation => operation)
+
+            if rpc_response.length > 0
+                @response[:status] = rpc_response[0][:data][:status]
+                @response[:response] = rpc_response[0][:data][:result]
+            else
+                @response[:status] = -1
+                @response[:response] = "No nodes discovered."
+            end
+        rescue Exception => e
+            @response[:status] = -2
+            @response[:response] = "API error: #{e}"
+        end
+
+        render :json => @response                
     end
 
 
