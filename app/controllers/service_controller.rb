@@ -1309,12 +1309,16 @@ class ServiceController < ApplicationController
 
             r_client.fact_filter "cloudways_customer", @customer_number
             r_client.identity_filter(@hostname)
-            r = r_client.ping()
-            if r.nil? or r.empty?
+
+            rpc_response = r_client.get_fact(:fact => 'fqdn')
+            if rpc_response.length > 0
+                alive_flag = true
+            else
                 @response[:status] = -1
                 @response[:response] = "#{@hostname} is not alive on network."
                 alive_flag = false
             end
+
         rescue Exception => e
             @response[:status] = -2
             @response[:response] = "API error: #{e}"
@@ -1429,8 +1433,11 @@ class ServiceController < ApplicationController
 
             r_client.fact_filter "cloudways_customer", @customer_number
             r_client.identity_filter(@hostname)
-            r = r_client.ping()
-            if r.nil? or r.empty?
+
+            rpc_response = r_client.get_fact(:fact => 'fqdn')
+            if rpc_response.length > 0
+                alive_flag = true
+            else
                 @response[:status] = -1
                 @response[:response] = "#{@hostname} is not alive on network."
                 alive_flag = false
