@@ -1845,7 +1845,7 @@ class ServiceController < ApplicationController
             rpc_client = rpcclient('shorewall', {:exit_on_failure => false})
             rpc_client.verbose = false
             rpc_client.progress = false
-            rpc_client.timeout = @timeout
+            rpc_client.timeout = 300
 
             rpc_client.identity_filter @hostname
 
@@ -1904,7 +1904,7 @@ class ServiceController < ApplicationController
             rpc_client = rpcclient('shorewall', {:exit_on_failure => false})
             rpc_client.verbose = false
             rpc_client.progress = false
-            rpc_client.timeout = @timeout
+            rpc_client.timeout = 300
 
             rpc_client.identity_filter @hostname
 
