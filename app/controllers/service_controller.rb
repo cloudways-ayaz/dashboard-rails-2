@@ -1605,6 +1605,9 @@ class ServiceController < ApplicationController
     #       hostname
     #       device
     #
+    # This call runs the job in background. The caller should call app_status to find out the 
+    # the status of the background job.
+    #
     def resize_disk
         @response = check_customer_number_and_hostname_params
         unless @is_clean
@@ -1617,8 +1620,7 @@ class ServiceController < ApplicationController
             return render :json => @response
         end
 
-        # We want a longer timeout, 15 minutes long.
-        timeout = 900
+        timeout = @timeout
 
         device = params[:device]
 
